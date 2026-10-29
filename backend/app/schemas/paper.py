@@ -76,6 +76,7 @@ class SavedPaperResponse(BaseModel):
     source: Optional[str] = None
     publication_type: Optional[str] = None
     relevance_score: int = 0
+    is_analyzed: bool = False
     created_at: datetime
     updated_at: datetime
 

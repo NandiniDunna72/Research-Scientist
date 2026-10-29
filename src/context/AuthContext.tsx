@@ -8,6 +8,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (fullName: string, email: string, password: string) => Promise<void>;
+  signInDemo: () => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -24,10 +25,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     async function checkAuth() {
       const storedToken = authService.getToken();
       if (!storedToken) {
-        if (isMounted) {
-          setUser(null);
-          setToken(null);
-          setIsLoading(false);
+        try {
+          const demoRes = await authService.signInDemo();
+          if (isMounted) {
+            setUser(demoRes.user);
+            setToken(demoRes.token);
+          }
+        } catch {
+          if (isMounted) {
+            setUser(null);
+            setToken(null);
+          }
+        } finally {
+          if (isMounted) {
+            setIsLoading(false);
+          }
         }
         return;
       }
@@ -39,14 +51,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setUser(currentUser);
             setToken(storedToken);
           } else {
-            setUser(null);
-            setToken(null);
+            // If token expired, refresh with demo session
+            const demoRes = await authService.signInDemo();
+            setUser(demoRes.user);
+            setToken(demoRes.token);
           }
         }
       } catch {
         if (isMounted) {
-          setUser(null);
-          setToken(null);
+          try {
+            const demoRes = await authService.signInDemo();
+            setUser(demoRes.user);
+            setToken(demoRes.token);
+          } catch {
+            setUser(null);
+            setToken(null);
+          }
         }
       } finally {
         if (isMounted) {
@@ -74,6 +94,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setToken(res.token);
   };
 
+  const signInDemo = async () => {
+    const res = await authService.signInDemo();
+    setUser(res.user);
+    setToken(res.token);
+  };
+
   const logout = async () => {
     await authService.logout();
     setUser(null);
@@ -87,6 +113,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     isAuthenticated: !!token && !!user,
     signIn,
     signUp,
+    signInDemo,
     logout,
   };
 

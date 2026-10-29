@@ -53,7 +53,7 @@ export const PresentationPage: React.FC = () => {
   const navigate = useNavigate();
   const { currentProject, addToast } = useResearch();
 
-  const projectId = id || currentProject?.id || 'proj-healthcare-ai';
+  const projectId = id || currentProject?.id || '';
 
   // Core state
   const [config, setConfig] = useState<PresentationConfig | null>(null);

@@ -86,6 +86,24 @@ def signin_alias(req: LoginRequest, db: Session = Depends(get_db)):
     return login(req, db)
 
 
+@router.post(
+    "/demo",
+    response_model=TokenResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Obtain authenticated demo credentials with valid signed JWT",
+)
+def demo_login(db: Session = Depends(get_db)):
+    user, token = AuthService.get_or_create_demo_user(db)
+    user_res = UserResponse.model_validate(user)
+    return TokenResponse(
+        access_token=token,
+        token=token,
+        token_type="bearer",
+        message="Demo session authenticated successfully.",
+        user=user_res,
+    )
+
+
 @router.get(
     "/me",
     response_model=CurrentUserResponse,

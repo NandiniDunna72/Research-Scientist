@@ -21,5 +21,9 @@ class ProjectResponse(BaseModel):
     topic: Optional[str] = None
     description: Optional[str] = None
     domain: Optional[str] = None
+    papers_count: int = 0
+    analyzed_count: int = 0
+    progress: int = 0
+    current_stage: str = "papers"
     created_at: datetime
     updated_at: datetime

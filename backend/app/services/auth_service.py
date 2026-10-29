@@ -69,3 +69,23 @@ class AuthService:
         )
 
         return user, token
+
+    @classmethod
+    def get_or_create_demo_user(cls, db: Session) -> Tuple[User, str]:
+        email = "alex.vance@stanford.edu"
+        user = cls.get_by_email(db, email)
+        if not user:
+            user = User(
+                full_name="Dr. Alex Vance, Senior AI Scientist",
+                email=email,
+                password_hash=hash_password("DemoScientist2026!"),
+            )
+            db.add(user)
+            db.commit()
+            db.refresh(user)
+
+        token = create_access_token(
+            subject=user.id,
+            extra_claims={"email": user.email, "full_name": user.full_name},
+        )
+        return user, token

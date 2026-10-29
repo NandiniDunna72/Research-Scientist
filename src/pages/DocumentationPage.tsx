@@ -41,7 +41,7 @@ export const DocumentationPage: React.FC = () => {
   const navigate = useNavigate();
   const { currentProject, addToast } = useResearch();
 
-  const projectId = id || currentProject?.id || 'proj-healthcare-ai';
+  const projectId = id || currentProject?.id || '';
 
   // State
   const [config, setConfig] = useState<DocumentationConfig | null>(null);

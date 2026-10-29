@@ -222,11 +222,11 @@ Please perform cross-paper synthesis and return ONLY a valid JSON object matchin
         gaps: List[Dict[str, Any]] = []
 
         # =========================================================================
-        # GAP 1: Methodological Gap — Test-Time Continual Adaptation & Robustness
+        # GAP 1: Methodological Gap — Dynamic Adaptation Under Volatile Operational Conditions
         # =========================================================================
         drift_affected = [
             t for l, t in all_limitations
-            if re.search(r"\b(drift|shift|domain|stain|scanner|noise|unseen|generaliz)\b", l, re.I)
+            if re.search(r"\b(drift|shift|domain|noise|unseen|generaliz|volatile|traffic|dynamic|latency|delay|real-time)\b", l, re.I)
         ]
         if not drift_affected:
             drift_affected = paper_titles[:min(3, num_papers)]
@@ -234,26 +234,26 @@ Please perform cross-paper synthesis and return ONLY a valid JSON object matchin
             drift_affected = list(dict.fromkeys(drift_affected))
 
         gaps.append({
-            "gap_title": "Lack of Test-Time Continual Adaptation Across Scanner & Operational Distribution Shifts",
+            "gap_title": f"Lack of Real-Time Dynamic Adaptation Under Volatile Operational Environments in {topic}",
             "category": "Methodological Gap",
             "description": (
-                f"While the analyzed studies in {topic} demonstrate competitive benchmark accuracy, existing models rely on static, "
-                f"closed-world representation spaces. When exposed to distribution shifts (such as non-standard scanner optics, "
-                f"differing staining protocols, or institutional sensor calibrations), models suffer severe performance degradation. "
-                f"None of the reviewed architectures incorporate online or test-time self-supervised adaptation mechanisms."
+                f"While the analyzed studies in {topic} demonstrate competitive theoretical benchmark performance, existing algorithms rely on static "
+                f"or pre-compiled representation models. When exposed to real-world operational volatility (such as sudden traffic congestion, unexpected network latency, "
+                f"sensor degradation, or shifting environmental dynamics), these systems suffer severe performance degradation. "
+                f"None of the reviewed architectures incorporate closed-loop test-time self-adaptive recalibration mechanisms."
             ),
             "evidence": [
-                f"{t} documents sensitivity to distribution shifts and stain/sensor variations in reported limitations."
+                f"{t} documents vulnerability to real-world operational variance and dynamic environmental shifts in reported limitations."
                 for t in drift_affected[:3]
             ],
             "affected_papers": drift_affected,
             "why_it_matters": (
-                "Real-world clinical and operational deployment requires models that maintain diagnostic calibration across disparate "
-                "hospital sites without necessitating complete offline re-training or manual recalibration."
+                f"In mission-critical applications like {topic}, real-world systems must maintain high responsiveness and decision reliability across "
+                f"unforeseen operational shifts without requiring complete offline retraining or manual system resets."
             ),
             "potential_direction": (
-                "Develop lightweight, test-time singular value thresholding or unsupervised manifold regularization that dynamically "
-                "restricts gradient updates to orthogonal invariant subspaces during inference."
+                "Develop lightweight, test-time online reinforcement learning or adaptive state-space representations that dynamically "
+                "recalculate optimal pathways and policy weights under sub-second latency constraints."
             ),
             "confidence": "High" if len(drift_affected) >= 2 else "Medium",
             "confidence_rationale": f"Explicitly corroborated by limitation disclosures across {len(drift_affected)} analyzed papers.",
@@ -261,32 +261,32 @@ Please perform cross-paper synthesis and return ONLY a valid JSON object matchin
         })
 
         # =========================================================================
-        # GAP 2: Dataset Gap — Geographic & Demographic Diversity Constraints
+        # GAP 2: Dataset & Operational Gap — Geographic and Environmental Diversity
         # =========================================================================
         dataset_affected = [t for _, t in all_datasets] if all_datasets else paper_titles
         dataset_affected = list(dict.fromkeys(dataset_affected))
 
         gaps.append({
-            "gap_title": "Cohort Homogeneity & Restricted Multi-Institutional Demographic Diversity",
+            "gap_title": f"Restricted Topological and Environmental Diversity Across {topic} Benchmarks",
             "category": "Dataset Gap",
             "description": (
                 f"Across the analyzed papers on {topic}, experimental validation remains heavily concentrated on standardized, "
-                f"centralized repositories (e.g., major academic medical cohorts), while underrepresented patient demographics, "
-                f"low-resource rural clinics, and long-tail rare disease variants remain critically under-sampled. "
-                f"The literature lacks multi-center validation protocols reflecting true global demographic distributions."
+                f"centralized repositories or narrow regional partitions (e.g., specific urban grids or isolated benchmark instances), while heterogeneous topologies, "
+                f"dense urban canyons, and multi-jurisdictional boundary zones remain critically under-sampled. "
+                f"The literature lacks cross-regional validation protocols reflecting diverse real-world operational distributions."
             ),
             "evidence": [
-                f"{t} relies on centralized benchmark cohorts without validating against community health or multi-ethnic registries."
+                f"{t} evaluates frameworks on restricted regional test partitions without cross-domain multi-topology validation."
                 for t in dataset_affected[:3]
             ],
             "affected_papers": dataset_affected[:min(4, num_papers)],
             "why_it_matters": (
-                "Models validated solely on homogeneous tertiary centers introduce algorithmic bias and risk clinical failure "
-                "when transitioned to broader, ethnically diverse patient cohorts."
+                f"Algorithms validated solely on homogeneous operational instances introduce systemic bias and risk severe operational failure "
+                f"when transferred to disparate topological or infrastructural environments."
             ),
             "potential_direction": (
-                "Construct federated, privacy-preserving multi-institutional consortia spanning diverse geographical regions, "
-                "incorporating stratified fairness metrics and demographic invariant loss functions."
+                "Construct standardized multi-region open-source benchmark suites incorporating heterogeneous topologies, variable road networks, "
+                "and probabilistic emergency demand distributions."
             ),
             "confidence": "High",
             "confidence_rationale": "Corroborated by dataset cohort parameters across all reviewed studies.",
@@ -294,29 +294,29 @@ Please perform cross-paper synthesis and return ONLY a valid JSON object matchin
         })
 
         # =========================================================================
-        # GAP 3: Evaluation Gap — Offline Surrogate Metrics vs. Prospective Clinical Utility
+        # GAP 3: Evaluation Gap — Offline Surrogate Metrics vs. Live Closed-Loop Utility
         # =========================================================================
         gaps.append({
-            "gap_title": "Disconnection Between Static Benchmark Accuracy Metrics and Prospective Interventional Utility",
+            "gap_title": f"Disconnection Between Static Offline Metrics and Live Closed-Loop Utility in {topic}",
             "category": "Evaluation Gap",
             "description": (
-                f"Existing literature predominantly measures algorithmic success using static discrimination metrics (AUC, F1, accuracy) "
+                f"Existing literature predominantly measures algorithmic success using static discrimination metrics (accuracy, theoretical travel times, simulated costs) "
                 f"evaluated on retrospective, pre-curated test partitions. However, none of the examined studies validate whether "
-                f"these statistical improvements translate into measurable reductions in clinician review time, diagnostic error rates, "
-                f"or actionable downstream therapeutic decision-making in live workflow environments."
+                f"these statistical improvements translate into measurable reductions in live response latency, dispatcher cognitive burden, "
+                f"or human-in-the-loop decision efficacy under realistic dispatch workflows."
             ),
             "evidence": [
-                f"{t} evaluates performance via retrospective offline metrics without prospective human-in-the-loop validation."
+                f"{t} evaluates performance via retrospective offline metrics without prospective human-in-the-loop or hardware-in-the-loop validation."
                 for t in paper_titles[:min(3, num_papers)]
             ],
             "affected_papers": paper_titles[:min(4, num_papers)],
             "why_it_matters": (
-                "High statistical ROC-AUC does not guarantee clinical efficacy; without prospective human-AI concordance studies, "
-                "deployed systems risk user friction, alert fatigue, and unverified decision hazards."
+                "High statistical simulation scores do not guarantee real-world efficacy; without prospective human-AI concordance studies, "
+                "deployed systems risk user friction, alert fatigue, and unverified decision bottlenecks."
             ),
             "potential_direction": (
-                "Design prospective clinician-in-the-loop evaluation trials measuring cognitive workload, diagnostic turnaround latency, "
-                "and counterfactual decision impact under realistic hospital PACS/RIS integration."
+                "Design prospective human-in-the-loop simulation trials measuring dispatcher cognitive workload, end-to-end mission turnaround latency, "
+                "and counterfactual decision impact under realistic dispatch command integration."
             ),
             "confidence": "High",
             "confidence_rationale": "Unanimous across all analyzed papers, which uniformly rely on retrospective test holdouts.",
@@ -324,11 +324,11 @@ Please perform cross-paper synthesis and return ONLY a valid JSON object matchin
         })
 
         # =========================================================================
-        # GAP 4: Practical / Implementation Gap — High Compute Footprint vs. Edge Deployment
+        # GAP 4: Practical / Implementation Gap — High Compute Overhead vs. Edge Units
         # =========================================================================
         compute_affected = [
             t for l, t in all_limitations
-            if re.search(r"\b(compute|gpu|memory|latency|slow|expensive|overhead|hardware)\b", l, re.I)
+            if re.search(r"\b(compute|gpu|memory|latency|slow|expensive|overhead|hardware|mobile|edge)\b", l, re.I)
         ]
         if not compute_affected:
             compute_affected = paper_titles[:min(2, num_papers)]
@@ -336,12 +336,12 @@ Please perform cross-paper synthesis and return ONLY a valid JSON object matchin
             compute_affected = list(dict.fromkeys(compute_affected))
 
         gaps.append({
-            "gap_title": "Extreme Computational Overhead Restricting Real-Time Edge Deployment",
+            "gap_title": f"High Computational Latency Restricting Sub-Second Deployment on Mobile & Edge Dispatch Units",
             "category": "Practical/Implementation Gap",
             "description": (
-                f"The leading methodologies identified in {topic} demand substantial multi-GPU hardware nodes (often requiring >80GB VRAM) "
-                f"and extensive floating-point compute budgets. This severe resource footprint precludes deployment on local point-of-care "
-                f"scanner devices, mobile field clinics, and embedded hospital infrastructure."
+                f"Leading deep neural and complex optimization methodologies identified in {topic} demand substantial floating-point compute budgets "
+                f"and dedicated server hardware. This severe resource footprint precludes execution directly on onboard mobile dispatch terminals, "
+                f"low-power vehicle telemetry hardware, and field-edge communication gateways."
             ),
             "evidence": [
                 f"{t} highlights high compute footprint and hardware demands as explicit operational constraints."
@@ -349,12 +349,12 @@ Please perform cross-paper synthesis and return ONLY a valid JSON object matchin
             ],
             "affected_papers": compute_affected,
             "why_it_matters": (
-                "Advanced AI diagnostic tools will remain confined to elite academic hospitals unless inference latency and memory footprints "
-                "can be drastically compressed for ubiquitous edge deployment."
+                f"In high-stakes applications like {topic}, rerouting latencies exceeding sub-second thresholds cause vehicles to miss optimal intersection turns, "
+                f"defeating the purpose of real-time optimization."
             ),
             "potential_direction": (
-                "Explore post-training structural pruning, dynamic token selection, and 4-bit integer quantization specifically optimized "
-                "for low-power neural processing units (NPUs)."
+                "Explore post-training structural pruning, neural surrogate approximations, and integer quantization specifically optimized "
+                "for low-power onboard vehicular processing units."
             ),
             "confidence": "Medium",
             "confidence_rationale": "Directly supported by operational overhead mentions in analyzed manuscripts.",
@@ -362,31 +362,30 @@ Please perform cross-paper synthesis and return ONLY a valid JSON object matchin
         })
 
         # =========================================================================
-        # GAP 5: Integration Gap — Multimodal Synthesis Across Longitudinal Clinical Context
+        # GAP 5: Integration Gap — Multi-Agent Fleet Coordination and Cross-Infrastructure Interoperability
         # =========================================================================
         gaps.append({
-            "gap_title": "Absence of Unified Multimodal Synthesis Incorporating Longitudinal Patient History",
+            "gap_title": f"Absence of Multi-Agent Fleet Coordination and Municipal Infrastructure Interoperability",
             "category": "Integration Gap",
             "description": (
-                f"Current studies evaluate specific diagnostic modalities (such as histology slides, radiographs, or clinical notes) "
-                f"in relative isolation or as static single-timepoint snapshots. Real-world medical diagnosis intrinsically demands "
-                f"synthesizing imaging evidence with longitudinal laboratory trajectories, genetic sequencing, and prior therapy histories."
+                f"Current studies evaluate route optimization for individual vehicles or static assignments in relative isolation. "
+                f"Real-world emergency operations intrinsically demand coordinated multi-vehicle fleet optimization, dynamic demand relocation, "
+                f"and bidirectional interoperability with municipal infrastructure (such as adaptive traffic signals, hospital emergency bed status, and municipal IoT sensors)."
             ),
             "evidence": [
-                f"{t} focuses on isolated single-session observations without integrating longitudinal prior medical history."
+                f"{t} focuses on isolated vehicle pathfinding without integrating multi-agent fleet cooperation or municipal sensor streams."
                 for t in paper_titles[:min(3, num_papers)]
             ],
             "affected_papers": paper_titles[:min(3, num_papers)],
             "why_it_matters": (
-                "Omitting temporal patient context blinds models to disease trajectory dynamics, leading to premature diagnosis "
-                "or false positives during transient inflammatory events."
+                "Uncoordinated vehicle routing leads to fleet clustering, route contention, and sub-optimal city-wide emergency coverage."
             ),
             "potential_direction": (
-                "Develop hierarchical state-space models (e.g., Mamba/S4 architectures) that naturally ingest asynchronous, irregularly sampled "
-                "longitudinal EHR logs alongside high-dimensional visual biomarker representations."
+                "Formulate decentralized multi-agent reinforcement learning (MARL) frameworks coupled with standardized IoT communication protocols "
+                "for seamless vehicle-to-infrastructure (V2I) coordination."
             ),
             "confidence": "Medium",
-            "confidence_rationale": "Synthesized from structural omissions in cross-paper input pipeline architectures.",
+            "confidence_rationale": "Synthesized from structural omissions in cross-paper routing architecture formulations.",
             "priority": 5,
         })
 
@@ -394,12 +393,12 @@ Please perform cross-paper synthesis and return ONLY a valid JSON object matchin
         major_cats = list(dict.fromkeys([g["category"] for g in gaps]))
         overall_summary = (
             f"A cross-paper analytical synthesis of {num_papers} research papers investigating '{topic}' reveals significant progress in "
-            f"foundational architectural modeling and retrospective benchmark accuracy. However, cross-comparative examination reveals "
+            f"foundational architectural modeling and theoretical pathing accuracy. However, cross-comparative examination reveals "
             f"systemic research frontiers that cannot be resolved within single-manuscript boundaries.\n\n"
             f"The primary bottleneck across the literature is the **{gaps[0]['gap_title']}** ({gaps[0]['category']}), followed by "
-            f"critical constraints in cohort demographic representation and prospective interventional validation. "
-            f"Subsequent researchers are uniquely positioned to target these high-impact frontiers to transition academic algorithms "
-            f"into reliable, generalizable, and clinically viable systems."
+            f"critical constraints in topological diversity and multi-agent infrastructure interoperability. "
+            f"Subsequent researchers are uniquely positioned to target these high-impact frontiers to transition algorithms "
+            f"into reliable, generalizable, and operationally viable systems."
         )
 
         return {

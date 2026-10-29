@@ -18,6 +18,7 @@ from app.routers.comparison import router as comparison_router
 from app.routers.architecture import router as architecture_router
 from app.routers.documentation import router as documentation_router
 from app.routers.presentations import router as presentations_router
+from app.routers.rag_agent import router as rag_agent_router
 
 
 
@@ -120,6 +121,7 @@ app.include_router(comparison_router, prefix="/api/paper-comparison", tags=["Pap
 app.include_router(architecture_router, prefix="/api/architecture", tags=["System Architecture"])
 app.include_router(documentation_router, prefix="/api/documentation", tags=["Research Documentation"])
 app.include_router(presentations_router, prefix="/api/presentations", tags=["Presentations"])
+app.include_router(rag_agent_router, prefix="/api/rag", tags=["RAG & Multi-Agent Engine"])
 
 
 

@@ -30,7 +30,9 @@ import {
 } from 'lucide-react';
 
 import { Button } from '../components/ui/Button';
+import { EmptyState } from '../components/ui/EmptyState';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/Card';
+
 import { Badge } from '../components/ui/Badge';
 import { 
   BarChart, 
@@ -90,14 +92,22 @@ export const ResearchGaps: React.FC<{ defaultTab?: 'gaps' | 'questions' }> = ({ 
           setSelectedPaperIds(papersList.map((p) => p.id));
 
           // 2. Fetch existing research gap analysis report
-          const savedReport = await researchGapService.getLatestGaps(projectId);
-          if (savedReport && savedReport.gaps && savedReport.gaps.length > 0) {
-            setReport(savedReport);
-            setGaps(savedReport.gaps);
-          } else {
-            // If no analysis exists yet in backend, load mock or fallback
-            const fallbackGaps = await researchService.getResearchGaps(projectId);
-            setGaps(fallbackGaps);
+          let currentReport = await researchGapService.getLatestGaps(projectId);
+          if (currentReport && currentReport.gaps && currentReport.gaps.length > 0) {
+            setReport(currentReport);
+            setGaps(currentReport.gaps);
+          } else if (papersList.length > 0) {
+            // Auto-synthesize gaps if analyzed papers exist
+            try {
+              const autoReport = await researchGapService.analyzeGaps(projectId);
+              if (autoReport && autoReport.gaps && autoReport.gaps.length > 0) {
+                currentReport = autoReport;
+                setReport(autoReport);
+                setGaps(autoReport.gaps);
+              }
+            } catch (e) {
+              console.warn('Auto gap synthesis skipped:', e);
+            }
           }
 
           // 3. Fetch structured research questions from PostgreSQL backend
@@ -105,23 +115,28 @@ export const ResearchGaps: React.FC<{ defaultTab?: 'gaps' | 'questions' }> = ({ 
           if (savedQuestionsReport && savedQuestionsReport.research_questions && savedQuestionsReport.research_questions.length > 0) {
             setQuestionsReport(savedQuestionsReport);
             setQuestions(savedQuestionsReport.research_questions);
+          } else if (currentReport && currentReport.gaps && currentReport.gaps.length > 0) {
+            // Auto-generate grounded questions matching the gaps
+            try {
+              const autoQ = await researchQuestionService.generateResearchQuestions(projectId);
+              if (autoQ && autoQ.research_questions && autoQ.research_questions.length > 0) {
+                setQuestionsReport(autoQ);
+                setQuestions(autoQ.research_questions);
+              }
+            } catch (e) {
+              console.warn('Auto question generation skipped:', e);
+            }
           } else {
-            const loadedQuestions = await researchService.getResearchQuestions(projectId);
-            setQuestions(loadedQuestions);
+            setQuestions([]);
           }
         } else {
-          // Unauthenticated fallback
-          const loadedGaps = await researchService.getResearchGaps(projectId);
-          setGaps(loadedGaps);
-          const loadedQuestions = await researchService.getResearchQuestions(projectId);
-          setQuestions(loadedQuestions);
+          setGaps([]);
+          setQuestions([]);
         }
       } catch (err: any) {
         console.warn('Error loading research gap / question data:', err);
-        const fallback = await researchService.getResearchGaps(projectId);
-        setGaps(fallback);
-        const fallbackQ = await researchService.getResearchQuestions(projectId);
-        setQuestions(fallbackQ);
+        setGaps([]);
+        setQuestions([]);
       } finally {
         setIsLoading(false);
       }
@@ -319,33 +334,58 @@ export const ResearchGaps: React.FC<{ defaultTab?: 'gaps' | 'questions' }> = ({ 
   const showFewPapersWarning = activeAnalyzedCount > 0 && activeAnalyzedCount < 3;
   const isZeroPapersEmptyState = analyzedPapers.length === 0 && gaps.length === 0 && !isLoading;
 
+  if (isZeroPapersEmptyState) {
+    return (
+      <div className="space-y-6 animate-fade-in py-6">
+        <div className="pb-3 border-b border-border">
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
+            Research Gaps & Questions
+          </h1>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Critical limitations and domain discrepancies extracted from analyzed papers
+          </p>
+        </div>
+        <EmptyState
+          icon={AlertCircle}
+          title="No Research Gaps Identified Yet"
+          description="Analyze your ingested research papers to automatically extract empirical limitations, methodology discrepancies, and formulated research questions."
+          actionText="Go to Paper Analysis"
+          onAction={() => navigate(currentProject ? `/research/${currentProject.id}/analysis` : '/research')}
+          secondaryActionText="Discover Papers"
+          onSecondaryAction={() => navigate(currentProject ? `/research/${currentProject.id}/papers` : '/research/new')}
+        />
+      </div>
+    );
+  }
+
   return (
+
     <div className="space-y-8 animate-fade-in">
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-border">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border/80">
         <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight font-heading gradient-heading">
               {mainTab === 'questions' ? 'Research Question Generation' : mainTab === 'gaps' ? 'Research Gaps Analysis' : 'Research Gaps & Questions'}
             </h1>
             {mainTab !== 'questions' && (
-              <Badge variant="warning" size="md">
+              <Badge variant="warning" size="md" className="font-semibold shadow-glow-xs">
                 {gaps.length} Unsolved Frontiers
               </Badge>
             )}
             {mainTab !== 'gaps' && questions.length > 0 && (
-              <Badge variant="indigo" size="md">
+              <Badge variant="indigo" size="md" className="font-semibold shadow-glow-xs">
                 {questions.length} Formulated Questions
               </Badge>
             )}
             {report && (
-              <Badge variant="indigo" size="sm" className="hidden sm:inline-flex gap-1 items-center">
-                <ShieldCheck className="w-3 h-3 text-indigo-400" />
+              <Badge variant="indigo" size="sm" className="hidden sm:inline-flex gap-1.5 items-center font-medium">
+                <ShieldCheck className="w-3.5 h-3.5 text-indigo-400" />
                 Verified Synthesis
               </Badge>
             )}
           </div>
-          <p className="text-xs text-muted-foreground mt-1 max-w-2xl">
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1 max-w-2xl">
             {mainTab === 'questions'
               ? 'Meaningful, research-oriented questions and hypotheses rigorously derived from identified research gaps and literature evidence'
               : 'Critical limitations and domain discrepancies extracted from analyzed papers, mapped to grounded research questions'}
@@ -407,14 +447,14 @@ export const ResearchGaps: React.FC<{ defaultTab?: 'gaps' | 'questions' }> = ({ 
       </div>
 
       {/* Top View Selector Tabs */}
-      <div className="flex items-center gap-1.5 border-b border-border/60 pb-2.5">
+      <div className="flex items-center gap-1.5 p-1 bg-secondary/50 rounded-2xl border border-border/60 max-w-fit shadow-2xs">
         <button
           type="button"
           onClick={() => setMainTab('all')}
-          className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+          className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
             mainTab === 'all'
-              ? 'bg-indigo-600 text-white shadow-xs'
-              : 'bg-secondary/60 text-muted-foreground hover:text-foreground hover:bg-secondary'
+              ? 'bg-card text-indigo-600 dark:text-indigo-400 shadow-2xs border border-border/60 scale-[1.01]'
+              : 'text-muted-foreground hover:text-foreground hover:bg-card/40'
           }`}
         >
           All Overview
@@ -422,25 +462,25 @@ export const ResearchGaps: React.FC<{ defaultTab?: 'gaps' | 'questions' }> = ({ 
         <button
           type="button"
           onClick={() => setMainTab('gaps')}
-          className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
+          className={`px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all ${
             mainTab === 'gaps'
-              ? 'bg-indigo-600 text-white shadow-xs'
-              : 'bg-secondary/60 text-muted-foreground hover:text-foreground hover:bg-secondary'
+              ? 'bg-card text-indigo-600 dark:text-indigo-400 shadow-2xs border border-border/60 scale-[1.01]'
+              : 'text-muted-foreground hover:text-foreground hover:bg-card/40'
           }`}
         >
-          <AlertCircle className="w-3.5 h-3.5" />
+          <AlertCircle className="w-3.5 h-3.5 text-amber-500" />
           <span>Research Gaps ({gaps.length})</span>
         </button>
         <button
           type="button"
           onClick={() => setMainTab('questions')}
-          className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
+          className={`px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all ${
             mainTab === 'questions'
-              ? 'bg-indigo-600 text-white shadow-xs'
-              : 'bg-secondary/60 text-muted-foreground hover:text-foreground hover:bg-secondary'
+              ? 'bg-card text-indigo-600 dark:text-indigo-400 shadow-2xs border border-border/60 scale-[1.01]'
+              : 'text-muted-foreground hover:text-foreground hover:bg-card/40'
           }`}
         >
-          <HelpCircle className="w-3.5 h-3.5" />
+          <HelpCircle className="w-3.5 h-3.5 text-indigo-500" />
           <span>Research Questions ({questions.length})</span>
         </button>
       </div>
@@ -613,11 +653,11 @@ export const ResearchGaps: React.FC<{ defaultTab?: 'gaps' | 'questions' }> = ({ 
 
       {/* Synthesis Overview Card (Requirement 12) */}
       {report && (
-        <Card className="border-border bg-gradient-to-br from-card via-card to-secondary/30">
+        <Card className="card-premium rounded-2xl border-indigo-500/30 overflow-hidden">
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between gap-2">
-              <CardTitle className="text-sm font-bold flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-indigo-600" />
+              <CardTitle className="text-sm font-bold flex items-center gap-2 font-heading">
+                <Sparkles className="w-4 h-4 text-indigo-500" />
                 Cross-Paper Research Gap Synthesis Report
               </CardTitle>
               <span className="text-[11px] font-mono text-muted-foreground">
@@ -653,30 +693,41 @@ export const ResearchGaps: React.FC<{ defaultTab?: 'gaps' | 'questions' }> = ({ 
       {gaps.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Gap Frequency Chart */}
-          <Card>
+          <Card className="card-premium rounded-2xl border border-border/80 shadow-xs">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-bold flex items-center justify-between">
+              <CardTitle className="text-sm font-bold flex items-center justify-between font-heading">
                 <span>Gap Prevalence & Evidence Weight</span>
-                <BarChart3 className="w-4 h-4 text-muted-foreground" />
+                <BarChart3 className="w-4 h-4 text-indigo-500" />
               </CardTitle>
-              <CardDescription>Frequency score vs. source paper citations</CardDescription>
+              <CardDescription className="text-xs">Frequency score vs. source paper citations</CardDescription>
             </CardHeader>
             <CardContent className="p-4 pt-0">
               <div className="h-48 w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={gapFrequencyData}>
+                    <defs>
+                      <linearGradient id="gapFreqGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#6366f1" stopOpacity={0.9} />
+                        <stop offset="100%" stopColor="#818cf8" stopOpacity={0.4} />
+                      </linearGradient>
+                      <linearGradient id="gapPaperGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#a855f7" stopOpacity={0.9} />
+                        <stop offset="100%" stopColor="#c084fc" stopOpacity={0.4} />
+                      </linearGradient>
+                    </defs>
                     <XAxis dataKey="name" fontSize={11} stroke="#888888" tickLine={false} axisLine={false} />
                     <YAxis fontSize={11} stroke="#888888" tickLine={false} axisLine={false} />
                     <Tooltip 
                       contentStyle={{ 
                         backgroundColor: 'hsl(var(--card))', 
                         borderColor: 'hsl(var(--border))', 
-                        borderRadius: '0.5rem', 
-                        fontSize: '11px' 
+                        borderRadius: '0.75rem', 
+                        fontSize: '11px',
+                        boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.15)' 
                       }} 
                     />
-                    <Bar dataKey="frequency" fill="#6366f1" radius={[4, 4, 0, 0]} name="Prevalence Score" />
-                    <Bar dataKey="papers" fill="#a5b4fc" radius={[4, 4, 0, 0]} name="Source Papers" />
+                    <Bar dataKey="frequency" fill="url(#gapFreqGrad)" radius={[6, 6, 0, 0]} name="Prevalence Score" />
+                    <Bar dataKey="papers" fill="url(#gapPaperGrad)" radius={[6, 6, 0, 0]} name="Source Papers" />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -684,13 +735,13 @@ export const ResearchGaps: React.FC<{ defaultTab?: 'gaps' | 'questions' }> = ({ 
           </Card>
 
           {/* Gap Importance Distribution */}
-          <Card>
+          <Card className="card-premium rounded-2xl border border-border/80 shadow-xs">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-bold flex items-center justify-between">
+              <CardTitle className="text-sm font-bold flex items-center justify-between font-heading">
                 <span>Confidence & Criticality Breakdown</span>
-                <PieIcon className="w-4 h-4 text-muted-foreground" />
+                <PieIcon className="w-4 h-4 text-purple-500" />
               </CardTitle>
-              <CardDescription>Prioritization matrix for thesis / grant formulation</CardDescription>
+              <CardDescription className="text-xs">Prioritization matrix for thesis / grant formulation</CardDescription>
             </CardHeader>
             <CardContent className="p-4 pt-0 flex flex-col sm:flex-row items-center justify-between gap-4">
               <div className="h-48 w-48 mx-auto">
@@ -700,9 +751,10 @@ export const ResearchGaps: React.FC<{ defaultTab?: 'gaps' | 'questions' }> = ({ 
                       data={importanceData}
                       cx="50%"
                       cy="50%"
-                      innerRadius={45}
-                      outerRadius={70}
-                      paddingAngle={4}
+                      innerRadius={48}
+                      outerRadius={72}
+                      paddingAngle={5}
+                      cornerRadius={5}
                       dataKey="value"
                     >
                       {importanceData.map((entry, index) => (
@@ -713,8 +765,9 @@ export const ResearchGaps: React.FC<{ defaultTab?: 'gaps' | 'questions' }> = ({ 
                       contentStyle={{ 
                         backgroundColor: 'hsl(var(--card))', 
                         borderColor: 'hsl(var(--border))', 
-                        borderRadius: '0.5rem', 
-                        fontSize: '11px' 
+                        borderRadius: '0.75rem', 
+                        fontSize: '11px',
+                        boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.15)' 
                       }} 
                     />
                   </PieChart>
@@ -760,73 +813,76 @@ export const ResearchGaps: React.FC<{ defaultTab?: 'gaps' | 'questions' }> = ({ 
                 : [gap.evidence];
 
               return (
-                <Card key={gap.id} className="border-border hover:border-indigo-300 dark:hover:border-indigo-800 transition-colors flex flex-col justify-between">
+                <Card key={gap.id} className="card-premium card-glow-indigo rounded-2xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between">
                   <CardContent className="p-5 space-y-3.5 text-xs flex-1 flex flex-col justify-between">
                     <div className="space-y-3.5">
                       {/* Header */}
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="px-2 py-0.5 rounded bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 font-bold font-mono text-[11px]">
+                          <span className="px-2.5 py-0.5 rounded-full bg-gradient-to-r from-indigo-500/15 to-purple-500/15 text-indigo-700 dark:text-indigo-300 font-bold font-mono text-[11px] border border-indigo-500/30">
                             Gap #{priorityNum}
                           </span>
-                          <span className="px-2 py-0.5 rounded bg-secondary text-foreground font-semibold font-mono text-[11px]">
+                          <span className="px-2 py-0.5 rounded-md bg-secondary text-foreground font-semibold font-mono text-[10.5px]">
                             Priority {priorityNum}
                           </span>
-                          <Badge variant="outline" size="sm" className="font-medium text-indigo-700 dark:text-indigo-300 bg-indigo-50/60 dark:bg-indigo-950/40">
+                          <Badge variant="outline" size="sm" className="font-semibold text-indigo-700 dark:text-indigo-300 bg-indigo-50/60 dark:bg-indigo-950/40">
                             {categoryVal}
                           </Badge>
                           <Badge
                             variant={confidenceVal === 'High' ? 'default' : confidenceVal === 'Medium' ? 'warning' : 'secondary'}
                             size="sm"
+                            className="font-semibold"
                           >
                             {confidenceVal} Confidence
                           </Badge>
                         </div>
-                        <span className="text-[11px] text-muted-foreground font-mono shrink-0">
-                          Score: {gap.frequencyScore}/10
+                        <span className="text-[11px] text-muted-foreground font-mono font-bold shrink-0 bg-secondary/80 px-2 py-0.5 rounded-md border border-border/60">
+                          {gap.frequencyScore}/10
                         </span>
                       </div>
 
                       {/* Gap Title */}
-                      <h3 className="font-bold text-sm text-foreground leading-snug">
+                      <h3 className="font-extrabold text-sm sm:text-base text-foreground leading-snug font-heading">
                         {gap.title || gap.gap_title}
                       </h3>
 
                       {/* Gap Description */}
-                      <p className="text-muted-foreground leading-relaxed">
+                      <p className="text-muted-foreground leading-relaxed text-xs">
                         {gap.description}
                       </p>
 
                       {/* Why It Matters */}
                       {gap.why_it_matters && (
-                        <div className="p-3 rounded-lg bg-indigo-50/40 dark:bg-indigo-950/20 border border-indigo-200/50 dark:border-indigo-800/40 space-y-1">
-                          <span className="text-[10px] font-semibold text-indigo-800 dark:text-indigo-300 uppercase tracking-wider block">
+                        <div className="p-3.5 rounded-xl bg-indigo-50/50 dark:bg-indigo-950/30 border border-indigo-200/60 dark:border-indigo-800/40 space-y-1 shadow-2xs">
+                          <span className="text-[10px] font-bold text-indigo-700 dark:text-indigo-300 uppercase tracking-widest flex items-center gap-1.5">
+                            <Target className="w-3 h-3 text-indigo-500" />
                             Why It Matters
                           </span>
-                          <p className="text-foreground leading-relaxed">
+                          <p className="text-foreground leading-relaxed text-xs">
                             {gap.why_it_matters}
                           </p>
                         </div>
                       )}
 
                       {/* Evidence snippet */}
-                      <div className="p-3 rounded-lg bg-secondary/50 border border-border/60 space-y-1.5">
-                        <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block">
+                      <div className="p-3.5 rounded-xl bg-secondary/50 border border-border/70 space-y-1.5">
+                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block">
                           Empirical Evidence from Literature
                         </span>
                         {evidenceItems.map((ev, evIdx) => (
-                          <p key={evIdx} className="text-foreground leading-relaxed italic">
-                            • "{ev}"
+                          <p key={evIdx} className="text-foreground leading-relaxed text-xs italic border-l-2 border-indigo-500/60 pl-2.5 my-1">
+                            "{ev}"
                           </p>
                         ))}
                       </div>
 
                       {/* Potential Research Direction */}
-                      <div className="p-3 rounded-lg bg-emerald-50/50 dark:bg-emerald-950/40 border border-emerald-200/60 dark:border-emerald-800/60 space-y-1">
-                        <span className="text-[10px] font-semibold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider block">
+                      <div className="p-3.5 rounded-xl bg-gradient-to-r from-emerald-50/60 to-teal-50/40 dark:from-emerald-950/40 dark:to-teal-950/20 border border-emerald-300/60 dark:border-emerald-700/50 space-y-1">
+                        <span className="text-[10px] font-bold text-emerald-800 dark:text-emerald-300 uppercase tracking-widest flex items-center gap-1.5">
+                          <Compass className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
                           Potential Research Direction
                         </span>
-                        <p className="text-emerald-900 dark:text-emerald-200 leading-relaxed font-medium">
+                        <p className="text-emerald-950 dark:text-emerald-100 leading-relaxed font-semibold text-xs">
                           {gap.potential_direction || gap.potentialResearchOpportunity}
                         </p>
                       </div>

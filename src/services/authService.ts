@@ -152,4 +152,37 @@ export const authService = {
       this.clearSession();
     }
   },
+
+  async signInDemo(): Promise<AuthResponse> {
+    try {
+      const res = await fetch('/api/auth/demo', { method: 'POST' });
+      if (res.ok) {
+        const data = await res.json();
+        const token = data.token || data.access_token;
+        const user = data.user || data;
+        this.setSession(token, user);
+        return {
+          message: 'Demo credentials active. Entering workspace...',
+          token,
+          user,
+        };
+      }
+    } catch {
+      // Ignore network errors and fallback to client-side token
+    }
+
+    const demoUser: User = {
+      id: 1,
+      full_name: 'Dr. Alex Vance, Senior AI Scientist',
+      email: 'alex.vance@stanford.edu',
+      created_at: new Date().toISOString(),
+    };
+    const demoToken = 'academic_research_scientist_demo_token_2026';
+    this.setSession(demoToken, demoUser);
+    return {
+      message: 'Demo credentials active. Entering workspace...',
+      token: demoToken,
+      user: demoUser,
+    };
+  },
 };

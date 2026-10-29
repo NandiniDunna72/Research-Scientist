@@ -45,5 +45,9 @@ class ResearchPaper(Base):
     user = relationship("User", backref="papers")
     project = relationship("ResearchProject", back_populates="papers")
 
+    @property
+    def is_analyzed(self) -> bool:
+        return len(self.analyses or []) > 0
+
     def __repr__(self) -> str:
         return f"<ResearchPaper(id={self.id}, user_id={self.user_id}, title='{self.title[:30]}')>"

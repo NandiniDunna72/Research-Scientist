@@ -1,10 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import React, { useState, useEffect, useMemo } from 'react';
+
+import { useParams, useNavigate } from 'react-router-dom';
 import { useResearch } from '../context/ResearchContext';
 import { researchService } from '../services/researchService';
 import { authService } from '../services/authService';
 import { paperService } from '../services/paperService';
 import { PaperAnalysis as PaperAnalysisType, ResearchPaper } from '../types';
+import { EmptyState } from '../components/ui/EmptyState';
 import { 
   FileText, 
   Sparkles, 
@@ -34,10 +36,26 @@ import ReactMarkdown from 'react-markdown';
 type TabKey = 'overview' | 'abstract' | 'summary' | 'gaps' | 'literature' | 'methodology';
 
 export const PaperAnalysis: React.FC = () => {
-  const { papers, setPapers, addToast } = useResearch();
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const { papers, currentProject, loadProjectPapers, setPapers, addToast } = useResearch();
+
+  // Ensure project papers are loaded when visiting analysis directly
+  useEffect(() => {
+    const targetId = id || currentProject?.id;
+    if (targetId && papers.length === 0) {
+      loadProjectPapers(targetId);
+    }
+  }, [id, currentProject?.id]);
   
-  // Selected paper state: prefer selected paper, then first paper, fallback to 'paper-1'
-  const initialPaperId = papers.find((p) => p.selected)?.id || papers[0]?.id || 'paper-1';
+  // Filter out any lingering mock papers with mock IDs
+  const validPapers = useMemo(() => {
+    return papers.filter((p) => !p.id.startsWith('paper-') && !p.id.startsWith('mock-'));
+  }, [papers]);
+
+  // Selected paper state: prefer selected paper, then first paper
+  const initialPaperId = validPapers.find((p) => p.selected)?.id || validPapers[0]?.id || '';
+
   const [selectedPaperId, setSelectedPaperId] = useState<string>(initialPaperId);
   const [activeTab, setActiveTab] = useState<TabKey>('overview');
   const [analysis, setAnalysis] = useState<PaperAnalysisType | null>(null);
@@ -48,15 +66,16 @@ export const PaperAnalysis: React.FC = () => {
   const [copied, setCopied] = useState(false);
 
   // Active paper object
-  const activePaper: ResearchPaper | undefined = papers.find((p) => p.id === selectedPaperId) || papers[0];
+  const activePaper: ResearchPaper | undefined = validPapers.find((p) => p.id === selectedPaperId) || validPapers[0];
 
   // Synchronize selection if papers load asynchronously
   useEffect(() => {
-    if (papers.length > 0 && !papers.some((p) => p.id === selectedPaperId)) {
-      const preferred = papers.find((p) => p.selected)?.id || papers[0].id;
+    if (validPapers.length > 0 && !validPapers.some((p) => p.id === selectedPaperId)) {
+      const preferred = validPapers.find((p) => p.selected)?.id || validPapers[0].id;
       setSelectedPaperId(preferred);
     }
-  }, [papers, selectedPaperId]);
+  }, [validPapers, selectedPaperId]);
+
 
   useEffect(() => {
     if (activePaper) {
@@ -235,7 +254,7 @@ export const PaperAnalysis: React.FC = () => {
     });
   };
 
-  const filteredPaperList = papers.filter((p) =>
+  const filteredPaperList = validPapers.filter((p) =>
     p.title.toLowerCase().includes(searchFilter.toLowerCase()) ||
     p.authors.some((a) => a.name.toLowerCase().includes(searchFilter.toLowerCase()))
   );
@@ -249,18 +268,46 @@ export const PaperAnalysis: React.FC = () => {
     { key: 'methodology', label: 'Methodology', icon: Cpu },
   ];
 
-  return (
-    <div className="space-y-4 animate-fade-in">
-      {/* Page Title */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2">
-        <div>
+  if (validPapers.length === 0 || !activePaper) {
+
+    return (
+      <div className="space-y-6 animate-fade-in py-6">
+        <div className="pb-3 border-b border-border">
           <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
             Paper Analysis Workspace
-            <span className="text-xs px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 font-mono">
-              AI Deep Synthesis
-            </span>
           </h1>
           <p className="text-xs text-muted-foreground mt-0.5">
+            Structured decomposition across contributions, research gaps, and methodologies
+          </p>
+        </div>
+        <EmptyState
+          icon={BookOpen}
+          title="No Papers to Analyze"
+          description="There are no papers ingested in this research workspace yet. Search and discover papers to begin deep academic synthesis."
+          actionText="Discover Papers"
+          onAction={() => navigate(currentProject ? `/research/${currentProject.id}/papers` : '/research/new')}
+          secondaryActionText="Start New Research"
+          onSecondaryAction={() => navigate('/research/new')}
+        />
+      </div>
+    );
+  }
+
+  return (
+
+    <div className="space-y-6 animate-fade-in">
+      {/* Page Title */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-border/80">
+        <div>
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight font-heading gradient-heading flex items-center gap-3">
+              Paper Analysis Workspace
+            </h1>
+            <Badge variant="indigo" size="md" className="font-mono font-semibold shadow-glow-xs">
+              AI Deep Synthesis
+            </Badge>
+          </div>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1">
             Structured decomposition across contributions, research gaps, and methodologies
           </p>
         </div>
@@ -270,12 +317,13 @@ export const PaperAnalysis: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
         {/* LEFT COLUMN: Paper Selection Sidebar (4 Cols) */}
         <div className="lg:col-span-4 space-y-3">
-          <Card className="p-3 bg-card border-border shadow-xs">
-            <div className="space-y-2.5">
+          <div className="card-premium p-4 rounded-2xl">
+            <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-foreground">
-                  Papers Ingested ({papers.length})
+                <span className="text-xs font-bold text-foreground font-heading">
+                  Papers Ingested ({validPapers.length})
                 </span>
+
                 <span className="text-[11px] text-muted-foreground font-mono">
                   Select to inspect
                 </span>
@@ -285,37 +333,55 @@ export const PaperAnalysis: React.FC = () => {
                 onChange={(e) => setSearchFilter(e.target.value)}
                 placeholder="Filter paper list..."
                 icon={<Search className="w-3.5 h-3.5" />}
-                className="text-xs h-8"
+                className="text-xs h-9 bg-background/50 border-border/70 rounded-xl"
               />
             </div>
-          </Card>
+          </div>
 
           {/* Scrollable Paper Cards List */}
-          <div className="space-y-2 max-h-[calc(100vh-280px)] overflow-y-auto pr-1">
+          <div className="space-y-2.5 max-h-[calc(100vh-280px)] overflow-y-auto pr-1">
             {filteredPaperList.map((paper) => {
               const isSelected = paper.id === selectedPaperId;
               return (
                 <div
                   key={paper.id}
                   onClick={() => setSelectedPaperId(paper.id)}
-                  className={`p-3 rounded-xl border text-xs cursor-pointer transition-all ${
+                  className={`p-3.5 rounded-2xl border text-xs cursor-pointer transition-all duration-200 relative group ${
                     isSelected
-                      ? 'border-indigo-600 bg-indigo-50/70 dark:bg-indigo-950/50 shadow-xs'
-                      : 'border-border/80 bg-card hover:bg-secondary/60 hover:border-border'
+                      ? 'card-premium border-indigo-500/70 bg-gradient-to-br from-indigo-50/70 to-purple-50/30 dark:from-indigo-950/50 dark:to-purple-950/20 shadow-glow-xs translate-x-0.5'
+                      : 'border-border/60 bg-card/70 hover:bg-secondary/60 hover:border-indigo-300 dark:hover:border-indigo-800'
                   }`}
                 >
-                  <div className="flex items-center justify-between gap-1 mb-1">
-                    <Badge variant={paper.relevanceScore > 90 ? 'success' : 'indigo'} size="sm">
-                      {paper.relevanceScore}% Relevance
+                  {/* Left accent bar on active */}
+                  {isSelected && (
+                    <div className="absolute left-0 top-3 bottom-3 w-1 bg-gradient-to-b from-indigo-500 to-purple-500 rounded-r-full" />
+                  )}
+
+                  <div className="flex items-center justify-between gap-1 mb-1.5 pl-1">
+                    <Badge variant={paper.relevanceScore > 90 ? 'success' : 'indigo'} size="sm" className="font-semibold font-mono shadow-2xs">
+                      {paper.relevanceScore}% Match
                     </Badge>
-                    <span className="text-[10px] text-muted-foreground font-mono">{paper.year}</span>
+                    <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground font-mono">
+                      <span>{paper.year}</span>
+                      <span>•</span>
+                      <span className="font-semibold text-foreground/80">{paper.source}</span>
+                    </div>
                   </div>
-                  <h4 className={`font-semibold line-clamp-2 leading-snug ${isSelected ? 'text-indigo-950 dark:text-indigo-100 font-bold' : 'text-foreground'}`}>
+
+                  <h4 className={`font-semibold line-clamp-2 leading-snug pl-1 ${isSelected ? 'text-indigo-600 dark:text-indigo-400 font-bold' : 'text-foreground group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors'}`}>
                     {paper.title}
                   </h4>
-                  <p className="text-[11px] text-muted-foreground mt-1 truncate">
-                    {paper.authors.map((a) => a.name).join(', ')}
-                  </p>
+
+                  <div className="flex items-center justify-between gap-2 mt-2 pt-1.5 border-t border-border/40 pl-1 text-[11px] text-muted-foreground">
+                    <p className="truncate flex-1">
+                      {paper.authors.map((a) => a.name).join(', ')}
+                    </p>
+                    {paper.citationsCount !== undefined && paper.citationsCount > 0 && (
+                      <span className="shrink-0 font-mono text-[10px] px-1.5 py-0.2 rounded bg-secondary text-foreground">
+                        {paper.citationsCount} cites
+                      </span>
+                    )}
+                  </div>
                 </div>
               );
             })}
@@ -325,12 +391,12 @@ export const PaperAnalysis: React.FC = () => {
         {/* RIGHT COLUMN: Selected Paper Analysis Workspace (8 Cols) */}
         <div className="lg:col-span-8 space-y-4">
           {activePaper && (
-            <Card className="shadow-xs overflow-hidden border-border">
+            <div className="card-premium rounded-2xl overflow-hidden border border-border/80 shadow-sm">
               {/* Paper Header */}
-              <div className="p-5 sm:p-6 border-b border-border/80 bg-secondary/20">
-                <div className="flex flex-wrap items-center gap-2 mb-2">
-                  <Badge variant="indigo" size="sm">{activePaper.source}</Badge>
-                  <Badge variant="outline" size="sm">{activePaper.year}</Badge>
+              <div className="p-5 sm:p-6 border-b border-border/70 bg-gradient-to-r from-secondary/40 via-card to-secondary/30 backdrop-blur-md">
+                <div className="flex flex-wrap items-center gap-2 mb-2.5">
+                  <Badge variant="indigo" size="sm" className="font-mono">{activePaper.source}</Badge>
+                  <Badge variant="outline" size="sm" className="font-mono">{activePaper.year}</Badge>
                   {analysis?.sourceType && (
                     <Badge
                       variant={
@@ -341,7 +407,7 @@ export const PaperAnalysis: React.FC = () => {
                           : 'warning'
                       }
                       size="sm"
-                      className="capitalize font-mono"
+                      className="capitalize font-mono shadow-2xs"
                     >
                       {analysis.sourceType === 'full_paper'
                         ? 'Source: Full Paper PDF'
@@ -350,28 +416,28 @@ export const PaperAnalysis: React.FC = () => {
                         : 'Source: Publication Metadata'}
                     </Badge>
                   )}
-                  <span className="text-xs text-muted-foreground font-serif italic">
+                  <span className="text-xs text-muted-foreground font-serif italic truncate max-w-xs">
                     {activePaper.journalOrConference}
                   </span>
                 </div>
 
-                <h2 className="text-base sm:text-lg font-bold text-foreground tracking-tight leading-snug">
+                <h2 className="text-base sm:text-xl font-extrabold text-foreground tracking-tight leading-snug font-heading">
                   {activePaper.title}
                 </h2>
 
-                <p className="text-xs text-muted-foreground mt-1.5">
+                <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
                   {activePaper.authors.map((a) => a.name).join(', ')}
                 </p>
 
                 {/* Actions Toolbar */}
                 <div className="flex flex-wrap items-center justify-between gap-2 pt-4 mt-4 border-t border-border/60">
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-2">
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={handleRegenerate}
                       disabled={isRegenerating}
-                      className="text-xs gap-1.5 h-8"
+                      className="text-xs gap-1.5 h-8.5 rounded-xl border-border/80 hover:border-indigo-400 font-medium"
                     >
                       {isRegenerating ? (
                         <Loader2 className="w-3.5 h-3.5 animate-spin text-indigo-600" />
@@ -385,7 +451,7 @@ export const PaperAnalysis: React.FC = () => {
                       variant="outline"
                       size="sm"
                       onClick={handleCopySection}
-                      className="text-xs gap-1.5 h-8"
+                      className="text-xs gap-1.5 h-8.5 rounded-xl border-border/80 hover:border-indigo-400 font-medium"
                     >
                       {copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
                       <span>{copied ? 'Copied' : 'Copy'}</span>
@@ -395,7 +461,7 @@ export const PaperAnalysis: React.FC = () => {
                       variant="outline"
                       size="sm"
                       onClick={handleExport}
-                      className="text-xs gap-1.5 h-8"
+                      className="text-xs gap-1.5 h-8.5 rounded-xl border-border/80 hover:border-indigo-400 font-medium"
                     >
                       <Download className="w-3.5 h-3.5" />
                       <span>Export</span>
@@ -406,7 +472,7 @@ export const PaperAnalysis: React.FC = () => {
                     href={activePaper.pdfUrl || '#'}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex items-center gap-1 text-xs text-indigo-600 dark:text-indigo-400 font-medium hover:underline"
+                    className="inline-flex items-center gap-1.5 text-xs text-indigo-600 dark:text-indigo-400 font-semibold hover:underline px-3 py-1.5 rounded-lg hover:bg-indigo-50/50 dark:hover:bg-indigo-950/40 transition-colors"
                   >
                     <span>Original Manuscript</span>
                     <ExternalLink className="w-3.5 h-3.5" />
@@ -414,26 +480,28 @@ export const PaperAnalysis: React.FC = () => {
                 </div>
               </div>
 
-              {/* Navigation Tabs */}
-              <div className="flex items-center gap-1 overflow-x-auto border-b border-border/80 px-4 bg-card no-scrollbar">
-                {tabs.map((tab) => {
-                  const Icon = tab.icon;
-                  const isActive = activeTab === tab.key;
-                  return (
-                    <button
-                      key={tab.key}
-                      onClick={() => setActiveTab(tab.key)}
-                      className={`flex items-center gap-1.5 py-3 px-3 text-xs font-semibold whitespace-nowrap border-b-2 transition-all ${
-                        isActive
-                          ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400'
-                          : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
-                      }`}
-                    >
-                      <Icon className="w-3.5 h-3.5 shrink-0" />
-                      <span>{tab.label}</span>
-                    </button>
-                  );
-                })}
+              {/* Modern Segmented Navigation Tabs */}
+              <div className="px-4 sm:px-6 pt-3.5 pb-1">
+                <div className="flex items-center gap-1 overflow-x-auto p-1 bg-secondary/50 rounded-xl border border-border/60 no-scrollbar">
+                  {tabs.map((tab) => {
+                    const Icon = tab.icon;
+                    const isActive = activeTab === tab.key;
+                    return (
+                      <button
+                        key={tab.key}
+                        onClick={() => setActiveTab(tab.key)}
+                        className={`flex items-center gap-1.5 py-1.5 px-3 text-xs font-semibold whitespace-nowrap rounded-lg transition-all ${
+                          isActive
+                            ? 'bg-card text-indigo-600 dark:text-indigo-400 shadow-2xs font-bold border border-border/60 scale-[1.01]'
+                            : 'text-muted-foreground hover:text-foreground hover:bg-card/40'
+                        }`}
+                      >
+                        <Icon className="w-3.5 h-3.5 shrink-0" />
+                        <span>{tab.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
 
               {/* Tab Content Display */}
@@ -445,7 +513,7 @@ export const PaperAnalysis: React.FC = () => {
                       <Sparkles className="w-5 h-5 text-indigo-600 absolute inset-0 m-auto animate-pulse" />
                     </div>
                     <div className="space-y-1">
-                      <h3 className="text-sm font-bold text-foreground">Analyzing research paper...</h3>
+                      <h3 className="text-sm font-bold text-foreground font-heading">Analyzing research paper...</h3>
                       <p className="text-xs text-muted-foreground max-w-sm mx-auto">
                         {loadingStage || `Synthesizing structured findings for ${activePaper.title}...`}
                       </p>
@@ -462,11 +530,17 @@ export const PaperAnalysis: React.FC = () => {
                     {/* TAB: OVERVIEW */}
                     {activeTab === 'overview' && (
                       <div className="space-y-4">
-                        <div className="p-4 rounded-xl bg-indigo-50/50 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900/40">
-                          <h4 className="font-bold text-sm text-foreground mb-1 flex items-center gap-1.5">
-                            <Sparkles className="w-4 h-4 text-indigo-600" />
-                            Executive AI Takeaway
-                          </h4>
+                        <div className="p-5 rounded-2xl bg-gradient-to-br from-indigo-50/60 via-card to-purple-50/30 dark:from-indigo-950/40 dark:via-card dark:to-purple-950/20 border border-indigo-500/20 shadow-xs relative overflow-hidden">
+                          <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/[0.06] rounded-full blur-2xl pointer-events-none" />
+                          <div className="flex items-center justify-between gap-2 mb-2">
+                            <h4 className="font-extrabold text-sm text-foreground flex items-center gap-2 font-heading">
+                              <Sparkles className="w-4 h-4 text-indigo-600" />
+                              <span>Executive AI Takeaway</span>
+                            </h4>
+                            <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-bold border border-indigo-500/20">
+                              SYNTHESIZED
+                            </span>
+                          </div>
                           <div className="prose-academic">
                             <ReactMarkdown>{analysis.overview}</ReactMarkdown>
                           </div>
@@ -474,20 +548,20 @@ export const PaperAnalysis: React.FC = () => {
 
                         {/* Research Problem & Objective */}
                         {(analysis.researchProblem || analysis.researchObjective) && (
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <div className="p-3.5 rounded-xl border border-border bg-card space-y-1">
-                              <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                            <div className="p-4 rounded-2xl border border-border/80 bg-card/90 shadow-2xs space-y-1.5">
+                              <span className="text-[10.5px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest block">
                                 Research Problem
                               </span>
-                              <p className="text-foreground leading-relaxed">
+                              <p className="text-foreground leading-relaxed text-xs">
                                 {analysis.researchProblem || 'Not available in the provided paper content.'}
                               </p>
                             </div>
-                            <div className="p-3.5 rounded-xl border border-border bg-card space-y-1">
-                              <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block">
+                            <div className="p-4 rounded-2xl border border-border/80 bg-card/90 shadow-2xs space-y-1.5">
+                              <span className="text-[10.5px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest block">
                                 Research Objective
                               </span>
-                              <p className="text-foreground leading-relaxed">
+                              <p className="text-foreground leading-relaxed text-xs">
                                 {analysis.researchObjective || 'Not available in the provided paper content.'}
                               </p>
                             </div>
@@ -830,7 +904,7 @@ export const PaperAnalysis: React.FC = () => {
                   </div>
                 )}
               </div>
-            </Card>
+            </div>
           )}
         </div>
       </div>

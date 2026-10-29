@@ -26,9 +26,10 @@ interface ResearchContextType {
   // Papers
   papers: ResearchPaper[];
   setPapers: React.Dispatch<React.SetStateAction<ResearchPaper[]>>;
+  loadProjectPapers: (projectId: string) => Promise<ResearchPaper[]>;
   togglePaperSelect: (paperId: string) => Promise<void>;
   selectAllPapers: (select: boolean) => Promise<void>;
-  reloadPapers: () => Promise<void>;
+  reloadPapers: (projectId?: string) => Promise<void>;
   discoverPapers: (query: string, limit?: number) => Promise<ResearchPaper[]>;
   savePaper: (paper: ResearchPaper) => Promise<void>;
   isDiscovering: boolean;
@@ -71,16 +72,42 @@ export const ResearchProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     async function init() {
       setIsLoading(true);
       try {
-        const [loadedProjects, loadedPapers, loadedSettings] = await Promise.all([
+        // Clean up any stale mock data from localStorage for a fresh workspace
+        try {
+          const purgeIfMock = (key: string) => {
+            const val = localStorage.getItem(key);
+            if (val && (
+              val.includes('paper-1') ||
+              val.includes('paper-2') ||
+              val.includes('proj-healthcare-ai') ||
+              val.includes('proj-llm-edu') ||
+              val.includes('OncVision') ||
+              val.includes('Multimodal Vision-Language')
+            )) {
+              localStorage.removeItem(key);
+            }
+          };
+          purgeIfMock('ai_research_projects');
+          purgeIfMock('ai_research_papers');
+          purgeIfMock('ai_research_gaps');
+          purgeIfMock('ai_research_questions');
+        } catch {}
+
+
+        const [loadedProjects, loadedSettings] = await Promise.all([
           researchService.getProjects(),
-          researchService.getPapers(),
           researchService.getSettings(),
         ]);
         setProjects(loadedProjects);
-        setPapers(loadedPapers);
         setSettings(loadedSettings);
         if (loadedProjects.length > 0) {
-          setCurrentProject(loadedProjects[0]);
+          const firstProj = loadedProjects[0];
+          setCurrentProject(firstProj);
+          const firstPapers = await researchService.getPapers(firstProj.id);
+          setPapers(firstPapers);
+        } else {
+          setCurrentProject(null);
+          setPapers([]);
         }
         setThemeState(loadedSettings.appearance.theme);
       } catch (err) {
@@ -91,6 +118,7 @@ export const ResearchProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
     init();
   }, []);
+
 
   // Sync theme with HTML class
   useEffect(() => {
@@ -135,11 +163,23 @@ export const ResearchProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setToasts((prev) => prev.filter((t) => t.id !== id));
   };
 
-  const setCurrentProjectId = (id: string) => {
+  const loadProjectPapers = async (projectId: string): Promise<ResearchPaper[]> => {
+    try {
+      const p = await researchService.getPapers(projectId);
+      setPapers(p);
+      return p;
+    } catch (err) {
+      console.warn('Failed to load papers for project:', err);
+      return [];
+    }
+  };
+
+  const setCurrentProjectId = async (id: string) => {
     const found = projects.find((p) => p.id === id);
     if (found) {
       setCurrentProject(found);
     }
+    await loadProjectPapers(id);
   };
 
   const createProject = async (data: Partial<ResearchProject>): Promise<ResearchProject> => {
@@ -196,9 +236,14 @@ export const ResearchProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     });
   };
 
-  const reloadPapers = async () => {
-    const p = await researchService.getPapers();
-    setPapers(p);
+  const reloadPapers = async (projectId?: string) => {
+    const targetId = projectId || currentProject?.id;
+    if (targetId) {
+      await loadProjectPapers(targetId);
+    } else {
+      const p = await researchService.getPapers();
+      setPapers(p);
+    }
   };
 
   const [isDiscovering, setIsDiscovering] = useState(false);
@@ -283,6 +328,7 @@ export const ResearchProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         deleteProject,
         papers,
         setPapers,
+        loadProjectPapers,
         togglePaperSelect,
         selectAllPapers,
         reloadPapers,

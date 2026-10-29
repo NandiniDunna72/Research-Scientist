@@ -34,5 +34,31 @@ class ResearchProject(Base):
     user = relationship("User", backref="projects")
     papers = relationship("ResearchPaper", back_populates="project", cascade="all, delete-orphan")
 
+    @property
+    def papers_count(self) -> int:
+        return len(self.papers or [])
+
+    @property
+    def analyzed_count(self) -> int:
+        return sum(1 for p in (self.papers or []) if len(p.analyses or []) > 0)
+
+    @property
+    def progress(self) -> int:
+        count = self.papers_count
+        if count == 0:
+            return 0
+        analyzed = self.analyzed_count
+        if analyzed == 0:
+            return 20
+        return min(100, 20 + int((analyzed / max(1, count)) * 60))
+
+    @property
+    def current_stage(self) -> str:
+        if self.papers_count == 0:
+            return "papers"
+        if self.analyzed_count == 0:
+            return "papers"
+        return "analysis"
+
     def __repr__(self) -> str:
         return f"<ResearchProject(id={self.id}, user_id={self.user_id}, title='{self.title[:30]}')>"

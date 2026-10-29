@@ -45,7 +45,7 @@ export const ComparisonPage: React.FC = () => {
   const navigate = useNavigate();
   const { currentProject, addToast } = useResearch();
 
-  const projectId = id || currentProject?.id || 'proj-healthcare-ai';
+  const projectId = id || currentProject?.id || '';
 
   // State
   const [comparison, setComparison] = useState<PaperComparisonResult | null>(null);

@@ -29,7 +29,7 @@ class Settings(BaseSettings):
     # AI Service Configuration
     AI_API_KEY: Union[str, None] = None
     AI_PROVIDER: str = "auto"
-    AI_MODEL: str = "gemini-1.5-flash"
+    AI_MODEL: str = "gemini-3.5-flash"
 
     @field_validator("DATABASE_URL", mode="before")
     @classmethod

@@ -38,7 +38,7 @@ export const ArchitecturePage: React.FC = () => {
   const navigate = useNavigate();
   const { currentProject, addToast } = useResearch();
 
-  const projectId = id || currentProject?.id || 'proj-healthcare-ai';
+  const projectId = id || currentProject?.id || '';
 
   // State
   const [architecture, setArchitecture] = useState<ArchitectureResult | null>(null);
@@ -220,42 +220,42 @@ export const ArchitecturePage: React.FC = () => {
   return (
     <div className="space-y-6 pb-12">
       {/* Header Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border/80">
         <div>
-          <div className="flex flex-wrap items-center gap-2.5">
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
+          <div className="flex flex-wrap items-center gap-3">
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight font-heading gradient-heading">
               {architecture.architecture_title}
             </h1>
-            <Badge variant="indigo" size="md">
+            <Badge variant="indigo" size="md" className="font-semibold shadow-glow-xs">
               {architecture.architecture_type}
             </Badge>
-            <Badge variant="outline" size="sm" className="font-mono">
+            <Badge variant="outline" size="sm" className="font-mono text-xs">
               Module 8
             </Badge>
           </div>
-          <p className="text-xs sm:text-sm text-muted-foreground mt-1 max-w-4xl leading-relaxed">
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1.5 max-w-4xl leading-relaxed">
             {architecture.architecture_summary}
           </p>
         </div>
 
         {/* Action Controls */}
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-2.5 shrink-0">
           <Button
             variant="outline"
             size="sm"
             onClick={handleRegenerate}
             disabled={isGenerating}
-            className="text-xs gap-1.5 h-9"
+            className="text-xs gap-2 h-9 font-medium border-border/80 hover:bg-secondary/80"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${isGenerating ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-3.5 h-3.5 ${isGenerating ? 'animate-spin text-indigo-500' : ''}`} />
             <span>Regenerate</span>
           </Button>
 
           <Button
-            variant="outline"
+            variant="primary"
             size="sm"
             onClick={handleExportJSON}
-            className="text-xs gap-1.5 h-9"
+            className="text-xs gap-2 h-9 font-semibold shadow-glow-xs hover:shadow-glow-sm px-4"
           >
             <Download className="w-3.5 h-3.5" />
             <span>Export JSON</span>
@@ -312,23 +312,23 @@ export const ArchitecturePage: React.FC = () => {
       {/* TAB 1: ARCHITECTURE DIAGRAM */}
       {activeTab === 'diagram' && (
         <div className="space-y-4">
-          <Card className="border border-border shadow-xs">
-            <CardHeader className="pb-3">
+          <Card className="card-premium rounded-2xl overflow-hidden">
+            <CardHeader className="pb-3 border-b border-border/60 bg-secondary/20">
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle className="text-base font-semibold">
+                  <CardTitle className="text-base font-bold font-heading">
                     Visual System Architecture
                   </CardTitle>
                   <CardDescription className="text-xs">
                     Rendered Mermaid flowchart illustrating the multi-stage research solution and components
                   </CardDescription>
                 </div>
-                <Badge variant="indigo" size="sm">
+                <Badge variant="indigo" size="sm" className="font-mono font-semibold">
                   {architecture.architecture_diagram.diagram_type.toUpperCase()}
                 </Badge>
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pt-5">
               <MermaidViewer
                 source={architecture.architecture_diagram.source}
                 title="System Architecture Diagram"
@@ -346,7 +346,7 @@ export const ArchitecturePage: React.FC = () => {
         <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {architecture.components.map((comp) => (
-              <Card key={comp.component_id} className="border border-border shadow-xs hover:border-primary/40 transition-colors">
+              <Card key={comp.component_id} className="card-premium card-glow-indigo rounded-2xl hover:-translate-y-1 transition-all duration-300">
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between gap-2">
                     <div>

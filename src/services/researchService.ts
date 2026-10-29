@@ -59,46 +59,145 @@ const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 export const researchService = {
   // Projects
   async getProjects(): Promise<ResearchProject[]> {
-    await delay(250);
-    return getStored<ResearchProject[]>(STORAGE_KEYS.PROJECTS, mockProjects);
+    if (authService.isAuthenticated()) {
+      try {
+        const token = authService.getToken();
+        const res = await fetch('/api/projects', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const mapped: ResearchProject[] = (data || []).map((p: any) => ({
+            id: String(p.id),
+            title: p.title,
+            topic: p.topic || p.title,
+            description: p.description || '',
+            domain: p.domain || 'AI Research',
+            keywords: [],
+            paperCount: p.papers_count || 0,
+            yearRange: [2021, 2026],
+            preferredSources: ['PubMed', 'arXiv', 'IEEE Xplore', 'Nature'],
+            createdAt: p.created_at || new Date().toISOString(),
+            updatedAt: p.updated_at || new Date().toISOString(),
+            progress: p.progress || 0,
+            currentStage: p.current_stage || 'papers',
+            papersCount: p.papers_count || 0,
+            analyzedCount: p.analyzed_count || 0,
+            gapsIdentifiedCount: p.gaps_count || 0,
+            starred: false,
+          }));
+          return mapped;
+        }
+      } catch (err) {
+        console.warn('Failed to fetch projects from backend:', err);
+      }
+    }
+    const local = getStored<ResearchProject[]>(STORAGE_KEYS.PROJECTS, []);
+    return local.filter((p) => !p.id.startsWith('proj-healthcare-ai') && !p.id.startsWith('proj-llm-edu') && !p.id.startsWith('proj-traffic-ai'));
   },
 
   async getProjectById(id: string): Promise<ResearchProject | null> {
-    await delay(150);
     const projects = await this.getProjects();
-    return projects.find((p) => p.id === id) || projects[0] || null;
+    return projects.find((p) => p.id === id) || null;
   },
 
   async createProject(data: Partial<ResearchProject>): Promise<ResearchProject> {
-    await delay(400);
-    const projects = await this.getProjects();
+    if (authService.isAuthenticated()) {
+      try {
+        const token = authService.getToken();
+        const res = await fetch('/api/projects', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            title: data.title || 'Untitled Research',
+            topic: data.topic || data.title,
+            description: data.description || '',
+            domain: data.domain || 'AI Research',
+          }),
+        });
+        if (res.ok) {
+          const created = await res.json();
+          const newProject: ResearchProject = {
+            id: String(created.id),
+            title: created.title,
+            topic: created.topic || created.title,
+            description: created.description || '',
+            domain: created.domain || 'AI Research',
+            keywords: data.keywords || [],
+            paperCount: 0,
+            yearRange: data.yearRange || [2021, 2026],
+            preferredSources: data.preferredSources || ['PubMed', 'arXiv', 'IEEE Xplore', 'Nature'],
+            createdAt: created.created_at || new Date().toISOString(),
+            updatedAt: created.updated_at || new Date().toISOString(),
+            progress: 0,
+            currentStage: 'papers',
+            papersCount: 0,
+            analyzedCount: 0,
+            gapsIdentifiedCount: 0,
+            starred: false,
+          };
+          const projects = await this.getProjects();
+          const updated = [newProject, ...projects.filter((p) => p.id !== newProject.id)];
+          setStored(STORAGE_KEYS.PROJECTS, updated);
+          return newProject;
+        }
+      } catch (err) {
+        console.warn('Backend project creation failed, using local storage:', err);
+      }
+    }
+
+    const projects = getStored<ResearchProject[]>(STORAGE_KEYS.PROJECTS, []);
+    const cleanProjects = projects.filter((p) => !p.id.startsWith('proj-healthcare-ai') && !p.id.startsWith('proj-llm-edu') && !p.id.startsWith('proj-traffic-ai'));
     const newProject: ResearchProject = {
       id: `proj-${Date.now()}`,
       title: data.title || 'Untitled Research',
       topic: data.topic || data.title || 'Novel Research Exploration',
-      description: data.description || 'Systematic investigation and synthesis powered by AI Research Scientist.',
-      domain: data.domain || 'Multidisciplinary AI',
+      description: data.description || 'Systematic investigation powered by AI Research Scientist.',
+      domain: data.domain || 'AI Research',
       keywords: data.keywords || ['Artificial Intelligence', 'Literature Review', 'Deep Learning'],
-      paperCount: data.paperCount || 20,
-      yearRange: data.yearRange || [2021, 2025],
+      paperCount: 0,
+      yearRange: data.yearRange || [2021, 2026],
       preferredSources: data.preferredSources || ['PubMed', 'arXiv', 'IEEE Xplore', 'Nature'],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      progress: 25,
+      progress: 0,
       currentStage: 'papers',
-      papersCount: data.paperCount || 20,
+      papersCount: 0,
       analyzedCount: 0,
       gapsIdentifiedCount: 0,
       starred: false,
     };
 
-    const updated = [newProject, ...projects];
+    const updated = [newProject, ...cleanProjects];
     setStored(STORAGE_KEYS.PROJECTS, updated);
     return newProject;
   },
 
   async updateProject(id: string, updates: Partial<ResearchProject>): Promise<ResearchProject> {
-    await delay(200);
+    if (authService.isAuthenticated()) {
+      try {
+        const token = authService.getToken();
+        await fetch(`/api/projects/${id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            title: updates.title,
+            topic: updates.topic,
+            description: updates.description,
+            domain: updates.domain,
+          }),
+        });
+      } catch (err) {
+        console.warn('Backend project update error:', err);
+      }
+    }
+
     const projects = await this.getProjects();
     const index = projects.findIndex((p) => p.id === id);
     if (index === -1) throw new Error('Project not found');
@@ -114,7 +213,17 @@ export const researchService = {
   },
 
   async deleteProject(id: string): Promise<boolean> {
-    await delay(200);
+    if (authService.isAuthenticated()) {
+      try {
+        const token = authService.getToken();
+        await fetch(`/api/projects/${id}`, {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${token}` },
+        });
+      } catch (err) {
+        console.warn('Backend project delete error:', err);
+      }
+    }
     const projects = await this.getProjects();
     const filtered = projects.filter((p) => p.id !== id);
     setStored(STORAGE_KEYS.PROJECTS, filtered);
@@ -122,10 +231,19 @@ export const researchService = {
   },
 
   // Papers
-  async getPapers(_projectId?: string): Promise<ResearchPaper[]> {
-    await delay(300);
-    return getStored<ResearchPaper[]>(STORAGE_KEYS.PAPERS, mockPapers);
+  async getPapers(projectId?: string): Promise<ResearchPaper[]> {
+    if (authService.isAuthenticated()) {
+      try {
+        const saved = await paperService.getSavedPapers(projectId);
+        return saved || [];
+      } catch (err) {
+        console.warn('Could not retrieve papers from backend:', err);
+      }
+    }
+    const local = getStored<ResearchPaper[]>(STORAGE_KEYS.PAPERS, []);
+    return local.filter((p) => !p.id.startsWith('paper-') && !p.id.startsWith('mock-'));
   },
+
 
   async togglePaperSelect(paperId: string): Promise<ResearchPaper[]> {
     const papers = await this.getPapers();
@@ -140,6 +258,7 @@ export const researchService = {
     setStored(STORAGE_KEYS.PAPERS, updated);
     return updated;
   },
+
 
   // Paper Analysis
   async getPaperAnalysis(paperId: string, paper?: ResearchPaper): Promise<PaperAnalysis> {
@@ -202,76 +321,57 @@ export const researchService = {
 
   // Research Gaps & Questions
   async getResearchGaps(projectId?: string): Promise<ResearchGap[]> {
+    const pid = projectId || '1';
     if (authService.isAuthenticated()) {
       try {
-        const pid = projectId || '1';
         const report = await researchGapService.getLatestGaps(pid);
         if (report && report.gaps && report.gaps.length > 0) {
           return report.gaps;
         }
       } catch (err) {
-        console.warn('Backend research gaps fetch failed, falling back to mock:', err);
+        console.warn('Backend research gaps fetch failed, falling back to local:', err);
       }
     }
-    await delay(250);
-    return getStored<ResearchGap[]>(STORAGE_KEYS.GAPS, mockResearchGaps);
+    await delay(150);
+    const key = `${STORAGE_KEYS.GAPS}_${pid}`;
+    return getStored<ResearchGap[]>(key, []);
   },
 
   async getResearchQuestions(projectId?: string): Promise<ResearchQuestion[]> {
+    const pid = projectId || '1';
     if (authService.isAuthenticated()) {
       try {
-        const pid = projectId || '1';
         const res = await researchQuestionService.getResearchQuestions(pid);
         if (res && res.research_questions && res.research_questions.length > 0) {
           return res.research_questions;
         }
       } catch (err) {
-        console.warn('Backend research questions fetch failed, falling back to mock:', err);
+        console.warn('Backend research questions fetch failed, falling back to local:', err);
       }
     }
-    await delay(200);
-    return getStored<ResearchQuestion[]>(STORAGE_KEYS.QUESTIONS, mockResearchQuestions);
+    await delay(150);
+    const key = `${STORAGE_KEYS.QUESTIONS}_${pid}`;
+    return getStored<ResearchQuestion[]>(key, []);
   },
 
   async generateMoreQuestions(projectId?: string): Promise<ResearchQuestion[]> {
+    const pid = projectId || '1';
     if (authService.isAuthenticated()) {
       try {
-        const pid = projectId || '1';
         const res = await researchQuestionService.generateResearchQuestions(pid);
         if (res && res.research_questions && res.research_questions.length > 0) {
           return res.research_questions;
         }
       } catch (err) {
-        console.warn('Backend question generation failed, falling back to mock:', err);
+        console.warn('Backend question generation failed:', err);
       }
     }
-    await delay(1000);
-    const current = await this.getResearchQuestions(projectId);
-    const newQuestion: ResearchQuestion = {
-      id: `rq-${Date.now()}`,
-      gapId: 'gap-1',
-      question: 'How can dynamic low-rank feature projection prevent clinical drift without access to ground truth diagnostic labels?',
-      type: 'Methodological Question',
-      hypothesis: 'Unsupervised manifold regularization restricts gradient updates to orthogonal subspaces, stabilizing feature variance.',
-      motivation: 'Addresses scanner incompatibility in emergency triage without manual re-calibration.',
-      supporting_evidence: 'Empirical drift observed in multi-center validation.',
-      expected_investigation: 'Apply test-time singular value thresholding on latent transformer activations.',
-      feasibility: 'High',
-      priority: 'High',
-      rationale: 'Directly addresses scanner incompatibility in emergency triage without hospital IT manual re-calibration.',
-      suggestedMethodology: 'Apply test-time singular value thresholding on latent transformer activations across 300 test biopsies.',
-      saved: false,
-      difficulty: 'High Breakthrough',
-    };
-    const updated = [newQuestion, ...current];
-    setStored(STORAGE_KEYS.QUESTIONS, updated);
-    return updated;
+    return await this.getResearchQuestions(projectId);
   },
 
   async toggleSaveQuestion(questionId: string, currentQuestions?: ResearchQuestion[]): Promise<ResearchQuestion[]> {
     const questions = currentQuestions && currentQuestions.length > 0 ? currentQuestions : await this.getResearchQuestions();
     const updated = questions.map((q) => (q.id === questionId ? { ...q, saved: !q.saved } : q));
-    setStored(STORAGE_KEYS.QUESTIONS, updated);
     return updated;
   },
 

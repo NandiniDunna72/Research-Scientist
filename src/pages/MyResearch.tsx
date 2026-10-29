@@ -22,9 +22,10 @@ import { Button } from '../components/ui/Button';
 import { Card, CardContent } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { Input } from '../components/ui/Input';
-import { Progress } from '../components/ui/Progress';
 import { Modal } from '../components/ui/Modal';
+import { EmptyState } from '../components/ui/EmptyState';
 import { formatDate } from '../lib/utils';
+
 
 export const MyResearch: React.FC = () => {
   const { 
@@ -99,18 +100,18 @@ export const MyResearch: React.FC = () => {
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-border">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border/80">
         <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight font-heading gradient-heading">
               My Research Projects
             </h1>
-            <Badge variant="indigo" size="md">
-              {projects.length} Portfolios
+            <Badge variant="indigo" size="md" className="font-semibold px-2.5 py-0.5 shadow-glow-xs">
+              {projects.length} {projects.length === 1 ? 'Workspace' : 'Workspaces'}
             </Badge>
           </div>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            Manage your ongoing and archived AI-assisted research workspaces
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+            Manage your autonomous AI-assisted research workspaces, paper corpuses, and architectures
           </p>
         </div>
 
@@ -119,31 +120,31 @@ export const MyResearch: React.FC = () => {
             variant="primary"
             size="sm"
             onClick={() => navigate('/research/new')}
-            className="text-xs gap-1.5 shadow-sm"
+            className="text-xs gap-2 shadow-glow-sm hover:shadow-glow-md transition-all font-semibold px-4 py-2"
           >
-            <Plus className="w-3.5 h-3.5" />
+            <Plus className="w-4 h-4" />
             <span>New Research</span>
           </Button>
         </div>
       </div>
 
       {/* Filter and View Mode Toolbar */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-card p-3 rounded-xl border border-border shadow-xs">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 card-premium p-3 rounded-2xl">
         <div className="flex items-center gap-3 w-full sm:w-auto">
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search projects by title, topic..."
             icon={<Search className="w-3.5 h-3.5" />}
-            className="text-xs h-8.5 w-full sm:w-64"
+            className="text-xs h-9 w-full sm:w-72 bg-background/50 border-border/70 focus:border-indigo-500 rounded-xl"
           />
 
           <select
             value={selectedDomain}
             onChange={(e) => setSelectedDomain(e.target.value)}
-            className="text-xs h-8.5 rounded-lg border border-input bg-background px-3 text-foreground focus:outline-none focus:ring-1.5 focus:ring-indigo-600 font-medium"
+            className="text-xs h-9 rounded-xl border border-border/70 bg-background/50 px-3 text-foreground focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 font-medium transition-all"
           >
-            <option value="all">All Domains</option>
+            <option value="all">All Research Domains</option>
             {domains.map((d) => (
               <option key={d} value={d}>{d}</option>
             ))}
@@ -151,45 +152,58 @@ export const MyResearch: React.FC = () => {
         </div>
 
         {/* View Toggle */}
-        <div className="flex items-center gap-1 bg-secondary/50 p-1 rounded-lg border border-border/60">
+        <div className="flex items-center gap-1 bg-secondary/70 p-1 rounded-xl border border-border/60">
           <button
             onClick={() => setViewMode('grid')}
-            className={`p-1.5 rounded-md text-xs transition-colors ${
-              viewMode === 'grid' ? 'bg-card text-foreground shadow-2xs font-bold' : 'text-muted-foreground hover:text-foreground'
+            className={`p-1.5 rounded-lg text-xs transition-all ${
+              viewMode === 'grid' ? 'bg-card text-foreground shadow-xs font-bold' : 'text-muted-foreground hover:text-foreground'
             }`}
             title="Grid View"
           >
-            <LayoutGrid className="w-3.5 h-3.5" />
+            <LayoutGrid className="w-4 h-4" />
           </button>
           <button
             onClick={() => setViewMode('table')}
-            className={`p-1.5 rounded-md text-xs transition-colors ${
-              viewMode === 'table' ? 'bg-card text-foreground shadow-2xs font-bold' : 'text-muted-foreground hover:text-foreground'
+            className={`p-1.5 rounded-lg text-xs transition-all ${
+              viewMode === 'table' ? 'bg-card text-foreground shadow-xs font-bold' : 'text-muted-foreground hover:text-foreground'
             }`}
             title="Table View"
           >
-            <List className="w-3.5 h-3.5" />
+            <List className="w-4 h-4" />
           </button>
         </div>
       </div>
 
-      {/* Grid View */}
-      {viewMode === 'grid' ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {/* Empty State or Projects Display */}
+      {filteredProjects.length === 0 ? (
+        <EmptyState
+          icon={FolderKanban}
+          title="No Research Projects"
+          description={
+            search || selectedDomain !== 'all'
+              ? 'No projects match your current search or domain filter.'
+              : 'You have not created any research projects yet. Begin your first academic investigation to discover papers, extract gaps, and author manuscripts.'
+          }
+          actionText="+ Start New Research"
+          onAction={() => navigate('/research/new')}
+          className="my-8"
+        />
+      ) : viewMode === 'grid' ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           {filteredProjects.map((project) => (
-            <Card
+            <div
               key={project.id}
-              className="hover:border-indigo-300 dark:hover:border-indigo-800 transition-all cursor-pointer group flex flex-col justify-between"
+              className="card-premium card-glow-indigo rounded-2xl p-5 cursor-pointer group flex flex-col justify-between hover:-translate-y-1 transition-all duration-300 relative overflow-hidden"
               onClick={() => handleOpen(project)}
             >
-              <CardContent className="p-5 space-y-3.5">
+              <div className="space-y-3">
                 <div className="flex items-start justify-between gap-3">
-                  <div className="space-y-1">
+                  <div className="space-y-1.5">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="font-bold text-sm sm:text-base text-foreground group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                      <h3 className="font-heading font-bold text-base text-foreground group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
                         {project.title}
                       </h3>
-                      <Badge variant="indigo" size="sm">
+                      <Badge variant="indigo" size="sm" className="font-semibold shadow-2xs">
                         {project.domain}
                       </Badge>
                     </div>
@@ -199,27 +213,14 @@ export const MyResearch: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Progress */}
-                <div className="space-y-1.5 pt-1 border-t border-border/40">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-muted-foreground">
-                      Stage: <strong className="text-foreground capitalize">{project.currentStage}</strong>
-                    </span>
-                    <span className="font-mono text-muted-foreground">
-                      {project.progress}% Complete
-                    </span>
-                  </div>
-                  <Progress value={project.progress} color="primary" />
-                </div>
-
                 {/* Meta details & action buttons */}
-                <div className="flex items-center justify-between pt-2 border-t border-border/60 text-xs text-muted-foreground">
-                  <div className="flex items-center gap-3">
-                    <span className="flex items-center gap-1 text-[11px]">
-                      <Files className="w-3 h-3 text-muted-foreground" />
+                <div className="flex items-center justify-between pt-3 border-t border-border/50 text-xs text-muted-foreground">
+                  <div className="flex items-center gap-3.5">
+                    <span className="flex items-center gap-1.5 text-[11px] font-medium text-foreground/80">
+                      <Files className="w-3.5 h-3.5 text-indigo-500" />
                       {project.papersCount} papers
                     </span>
-                    <span className="text-[11px] font-mono">
+                    <span className="text-[11px] font-mono text-muted-foreground">
                       Updated {formatDate(project.updatedAt)}
                     </span>
                   </div>
@@ -244,84 +245,67 @@ export const MyResearch: React.FC = () => {
                     </button>
                     <button
                       onClick={() => setProjectToDelete(project)}
-                      className="p-1.5 text-muted-foreground hover:text-red-600 hover:bg-secondary rounded-lg transition-colors"
+                      className="p-1.5 text-muted-foreground hover:text-red-600 hover:bg-red-500/10 rounded-lg transition-colors"
                       title="Delete Project"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
-                    <Button
-                      variant="subtle"
-                      size="sm"
-                      onClick={() => handleOpen(project)}
-                      className="h-7 text-xs px-2.5 ml-1 gap-1"
-                    >
-                      <span>Open</span>
-                      <ArrowRight className="w-3 h-3" />
-                    </Button>
+                    <div className="w-7 h-7 rounded-lg bg-indigo-500/10 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition-all ml-1">
+                      <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                    </div>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           ))}
         </div>
       ) : (
         /* Table View */
-        <div className="rounded-xl border border-border bg-card overflow-hidden shadow-xs">
+        <div className="card-premium rounded-2xl overflow-hidden">
           <div className="overflow-x-auto min-w-full">
             <table className="w-full text-xs text-left border-collapse">
               <thead>
-                <tr className="bg-secondary/60 border-b border-border text-muted-foreground font-semibold">
-                  <th className="p-3.5 min-w-[220px]">Project Title</th>
-                  <th className="p-3.5 min-w-[140px]">Domain</th>
-                  <th className="p-3.5 text-center w-24">Papers</th>
-                  <th className="p-3.5 min-w-[140px]">Current Stage</th>
-                  <th className="p-3.5 min-w-[120px]">Progress</th>
-                  <th className="p-3.5 min-w-[120px]">Last Updated</th>
-                  <th className="p-3.5 text-right min-w-[140px]">Actions</th>
+                <tr className="bg-secondary/70 border-b border-border/80 text-muted-foreground font-semibold">
+                  <th className="p-4 min-w-[220px]">Project Title</th>
+                  <th className="p-4 min-w-[140px]">Domain</th>
+                  <th className="p-4 text-center w-24">Papers</th>
+                  <th className="p-4 min-w-[120px]">Last Updated</th>
+                  <th className="p-4 text-right min-w-[140px]">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border/60">
+              <tbody className="divide-y border-border/50">
                 {filteredProjects.map((project) => (
-                  <tr key={project.id} className="hover:bg-secondary/30 transition-colors">
-                    <td className="p-3.5 font-bold text-foreground">
+                  <tr key={project.id} className="hover:bg-secondary/40 transition-colors">
+                    <td className="p-4 font-bold text-foreground font-heading">
                       <div 
                         onClick={() => handleOpen(project)}
-                        className="cursor-pointer hover:text-indigo-600 dark:hover:text-indigo-400"
+                        className="cursor-pointer hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
                       >
                         {project.title}
                       </div>
                     </td>
-                    <td className="p-3.5 text-muted-foreground">
-                      <Badge variant="indigo" size="sm">{project.domain}</Badge>
+                    <td className="p-4 text-muted-foreground">
+                      <Badge variant="indigo" size="sm" className="font-semibold">{project.domain}</Badge>
                     </td>
-                    <td className="p-3.5 text-center font-mono text-muted-foreground">
+                    <td className="p-4 text-center font-mono text-muted-foreground font-semibold">
                       {project.papersCount}
                     </td>
-                    <td className="p-3.5 capitalize font-medium text-foreground">
-                      {project.currentStage}
-                    </td>
-                    <td className="p-3.5">
-                      <div className="flex items-center gap-2">
-                        <Progress value={project.progress} color="primary" />
-                        <span className="font-mono text-[11px] text-muted-foreground">{project.progress}%</span>
-                      </div>
-                    </td>
-                    <td className="p-3.5 font-mono text-muted-foreground text-[11px]">
+                    <td className="p-4 font-mono text-muted-foreground text-[11px]">
                       {formatDate(project.updatedAt)}
                     </td>
-                    <td className="p-3.5 text-right">
-                      <div className="flex items-center justify-end gap-1">
+                    <td className="p-4 text-right">
+                      <div className="flex items-center justify-end gap-1.5">
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => handleOpen(project)}
-                          className="h-7 text-xs px-2"
+                          className="h-7 text-xs px-2.5 font-medium hover:bg-indigo-500/10 hover:text-indigo-600 dark:hover:text-indigo-400"
                         >
-                          Open
+                          Open <ArrowRight className="w-3 h-3 ml-1" />
                         </Button>
                         <button
                           onClick={() => setProjectToDelete(project)}
-                          className="p-1.5 text-muted-foreground hover:text-red-600 rounded-md"
+                          className="p-1.5 text-muted-foreground hover:text-red-600 hover:bg-red-500/10 rounded-lg transition-colors"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>

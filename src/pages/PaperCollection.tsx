@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useResearch } from '../context/ResearchContext';
 import { ResearchPaper } from '../types';
@@ -16,7 +16,8 @@ import {
   Bookmark,
   Share2,
   FileText,
-  Check
+  Check,
+  RefreshCw
 } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Card, CardContent } from '../components/ui/Card';
@@ -31,6 +32,7 @@ export const PaperCollection: React.FC = () => {
   const { 
     papers, 
     currentProject, 
+    loadProjectPapers,
     togglePaperSelect, 
     selectAllPapers, 
     addToast,
@@ -40,7 +42,8 @@ export const PaperCollection: React.FC = () => {
   } = useResearch();
 
   // Search & Filters State
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState(currentProject?.topic || '');
+  const [lastSearchedTopic, setLastSearchedTopic] = useState<string>(currentProject?.topic || '');
   const [selectedSource, setSelectedSource] = useState<string>('all');
   const [selectedYear, setSelectedYear] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'relevance' | 'year' | 'citations'>('relevance');
@@ -49,8 +52,24 @@ export const PaperCollection: React.FC = () => {
   // Paper Details Modal
   const [activeModalPaper, setActiveModalPaper] = useState<ResearchPaper | null>(null);
 
+  // Load existing saved papers when project is mounted
+  useEffect(() => {
+    const targetId = id || currentProject?.id;
+    if (targetId) {
+      loadProjectPapers(targetId);
+    }
+  }, [id, currentProject?.id]);
+
+  useEffect(() => {
+    const topicToSearch = currentProject?.topic || currentProject?.title;
+    if (topicToSearch) {
+      setSearchQuery(topicToSearch);
+    }
+  }, [currentProject?.id, currentProject?.topic]);
+
   const handleDiscoverSearch = async () => {
-    const trimmed = searchQuery.trim();
+    const topicFallback = currentProject?.topic || currentProject?.title || 'AI Research';
+    const trimmed = (searchQuery.trim() || topicFallback).trim();
     if (!trimmed) {
       addToast({
         type: 'warning',
@@ -59,6 +78,7 @@ export const PaperCollection: React.FC = () => {
       });
       return;
     }
+    setLastSearchedTopic(trimmed);
     await discoverPapers(trimmed, 20);
   };
 
@@ -80,13 +100,24 @@ export const PaperCollection: React.FC = () => {
   const filteredPapers = useMemo(() => {
     return papers
       .filter((paper) => {
-        const matchesSearch = 
-          paper.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          paper.authors.some((a) => a.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
-          paper.abstract.toLowerCase().includes(searchQuery.toLowerCase());
-
         const matchesSource = selectedSource === 'all' || paper.source === selectedSource;
         const matchesYear = selectedYear === 'all' || paper.year.toString() === selectedYear;
+
+        // If searchQuery is empty or matches the discovered topic or project topic, all papers match!
+        const cleanQuery = searchQuery.trim().toLowerCase();
+        const cleanTopic = (lastSearchedTopic || currentProject?.topic || '').trim().toLowerCase();
+
+        let matchesSearch = true;
+        // Only apply in-page text filter if user typed a specific filter keyword that differs from the topic
+        if (cleanQuery && cleanQuery !== cleanTopic) {
+          const terms = cleanQuery.split(/\s+/).filter((w) => w.length > 1);
+          matchesSearch = terms.some((term) =>
+            paper.title.toLowerCase().includes(term) ||
+            paper.authors.some((a) => a.name.toLowerCase().includes(term)) ||
+            paper.abstract.toLowerCase().includes(term) ||
+            paper.tags.some((t) => t.toLowerCase().includes(term))
+          );
+        }
 
         return matchesSearch && matchesSource && matchesYear;
       })
@@ -96,7 +127,7 @@ export const PaperCollection: React.FC = () => {
         if (sortBy === 'citations') return b.citationsCount - a.citationsCount;
         return 0;
       });
-  }, [papers, searchQuery, selectedSource, selectedYear, sortBy]);
+  }, [papers, searchQuery, lastSearchedTopic, currentProject?.topic, selectedSource, selectedYear, sortBy]);
 
   const selectedCount = papers.filter((p) => p.selected).length;
   const allSelected = papers.length > 0 && selectedCount === papers.length;
@@ -110,13 +141,16 @@ export const PaperCollection: React.FC = () => {
       });
       return;
     }
-    navigate(`/research/${id || currentProject?.id || 'proj-healthcare-ai'}/analysis`);
+    const targetProjId = id || currentProject?.id;
+    navigate(targetProjId ? `/research/${targetProjId}/analysis` : '/research/new');
   };
 
   const handleAnalyzeAll = async () => {
     await selectAllPapers(true);
-    navigate(`/research/${id || currentProject?.id || 'proj-healthcare-ai'}/analysis`);
+    const targetProjId = id || currentProject?.id;
+    navigate(targetProjId ? `/research/${targetProjId}/analysis` : '/research/new');
   };
+
 
   const availableSources = Array.from(new Set(papers.map((p) => p.source)));
   const availableYears = Array.from(new Set(papers.map((p) => p.year))).sort((a, b) => b - a);
@@ -124,31 +158,31 @@ export const PaperCollection: React.FC = () => {
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Top Banner & Title */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-border">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-border/80">
         <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight font-heading gradient-heading">
               Related Research Papers
             </h1>
-            <Badge variant="indigo" size="md">
+            <Badge variant="indigo" size="md" className="font-semibold px-2.5 py-0.5 shadow-glow-xs">
               {papers.length} Discovered
             </Badge>
           </div>
-          <p className="text-xs text-muted-foreground mt-1 max-w-3xl leading-relaxed">
-            <strong className="text-foreground">Research Topic: </strong>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1 max-w-3xl leading-relaxed">
+            <strong className="text-foreground/90 font-medium">Research Corpus: </strong>
             {currentProject?.topic || 'Multimodal Deep Learning for Oncology Diagnosis'}
           </p>
         </div>
 
         {/* Global Action Buttons */}
-        <div className="flex items-center gap-2.5 shrink-0">
+        <div className="flex items-center gap-2.5 shrink-0 flex-wrap">
           <Button
             variant="outline"
             size="sm"
             onClick={() => selectAllPapers(!allSelected)}
-            className="text-xs gap-1.5"
+            className="text-xs gap-1.5 font-medium border-border/80 hover:bg-secondary/80"
           >
-            {allSelected ? <CheckSquare className="w-3.5 h-3.5" /> : <Square className="w-3.5 h-3.5" />}
+            {allSelected ? <CheckSquare className="w-3.5 h-3.5 text-indigo-500" /> : <Square className="w-3.5 h-3.5" />}
             <span>{allSelected ? 'Deselect All' : 'Select All'}</span>
           </Button>
 
@@ -156,7 +190,7 @@ export const PaperCollection: React.FC = () => {
             variant="outline"
             size="sm"
             onClick={handleAnalyzeAll}
-            className="text-xs gap-1.5"
+            className="text-xs gap-1.5 font-medium border-border/80 hover:bg-secondary/80"
           >
             <span>Analyze All</span>
           </Button>
@@ -166,9 +200,9 @@ export const PaperCollection: React.FC = () => {
             size="sm"
             disabled={selectedCount === 0}
             onClick={handleAnalyzeSelected}
-            className="text-xs gap-1.5 shadow-sm"
+            className="text-xs gap-2 shadow-glow-sm hover:shadow-glow-md font-semibold px-4 py-2"
           >
-            <FileSearch className="w-3.5 h-3.5" />
+            <FileSearch className="w-4 h-4" />
             <span>Analyze Selected ({selectedCount})</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </Button>
@@ -176,7 +210,7 @@ export const PaperCollection: React.FC = () => {
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 bg-card p-3 rounded-xl border border-border shadow-xs">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5 card-premium p-4 rounded-2xl">
         {/* Search */}
         <div className="lg:col-span-2 flex items-center gap-2">
           <Input
@@ -190,7 +224,7 @@ export const PaperCollection: React.FC = () => {
             }}
             placeholder="Search papers, topic, or keywords..."
             icon={<Search className="w-4 h-4" />}
-            className="text-xs h-9 flex-1"
+            className="text-xs h-9 flex-1 bg-background/50 border-border/70 focus:border-indigo-500 rounded-xl"
           />
           <Button
             type="button"
@@ -198,7 +232,7 @@ export const PaperCollection: React.FC = () => {
             size="sm"
             onClick={handleDiscoverSearch}
             disabled={isDiscovering}
-            className="h-9 px-3 text-xs shrink-0 gap-1.5 shadow-xs"
+            className="h-9 px-4 text-xs shrink-0 gap-2 shadow-glow-xs hover:shadow-glow-sm font-semibold rounded-xl"
             title="Search Semantic Scholar, arXiv, and Crossref"
           >
             {isDiscovering ? (
@@ -206,7 +240,7 @@ export const PaperCollection: React.FC = () => {
             ) : (
               <Search className="w-3.5 h-3.5" />
             )}
-            <span>Search</span>
+            <span>Discover</span>
           </Button>
         </div>
 
@@ -215,7 +249,7 @@ export const PaperCollection: React.FC = () => {
           <select
             value={selectedSource}
             onChange={(e) => setSelectedSource(e.target.value)}
-            className="w-full text-xs h-9 rounded-lg border border-input bg-background px-3 text-foreground focus:outline-none focus:ring-1.5 focus:ring-indigo-600"
+            className="w-full text-xs h-9 rounded-xl border border-border/70 bg-background/50 px-3 text-foreground focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 font-medium transition-all"
           >
             <option value="all">All Repositories</option>
             {availableSources.map((src) => (
@@ -229,7 +263,7 @@ export const PaperCollection: React.FC = () => {
           <select
             value={selectedYear}
             onChange={(e) => setSelectedYear(e.target.value)}
-            className="w-full text-xs h-9 rounded-lg border border-input bg-background px-3 text-foreground focus:outline-none focus:ring-1.5 focus:ring-indigo-600"
+            className="w-full text-xs h-9 rounded-xl border border-border/70 bg-background/50 px-3 text-foreground focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 font-medium transition-all"
           >
             <option value="all">All Publication Years</option>
             {availableYears.map((yr) => (
@@ -243,7 +277,7 @@ export const PaperCollection: React.FC = () => {
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as any)}
-            className="w-full text-xs h-9 rounded-lg border border-input bg-background px-3 text-foreground focus:outline-none focus:ring-1.5 focus:ring-indigo-600 font-medium"
+            className="w-full text-xs h-9 rounded-xl border border-border/70 bg-background/50 px-3 text-foreground focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 font-medium transition-all"
           >
             <option value="relevance">Sort by Relevance</option>
             <option value="year">Sort by Newest Year</option>
@@ -253,19 +287,18 @@ export const PaperCollection: React.FC = () => {
       </div>
 
       {/* Papers List */}
-      <div className="space-y-3.5">
+      <div className="space-y-4">
         {filteredPapers.map((paper) => {
           const isSelected = !!paper.selected;
           return (
-            <Card
+            <div
               key={paper.id}
-              className={`transition-all duration-150 ${
+              className={`card-premium card-glow-indigo rounded-2xl p-5 transition-all duration-300 ${
                 isSelected
-                  ? 'border-indigo-400 dark:border-indigo-700 bg-indigo-50/20 dark:bg-indigo-950/20 shadow-xs'
-                  : 'hover:border-border/80'
+                  ? 'border-indigo-500/50 bg-indigo-50/20 dark:bg-indigo-950/25 ring-1 ring-indigo-500/30'
+                  : 'hover:-translate-y-0.5'
               }`}
             >
-              <CardContent className="p-4 sm:p-5 space-y-3">
                 <div className="flex items-start gap-3.5">
                   {/* Selection Checkbox */}
                   <button
@@ -367,7 +400,8 @@ export const PaperCollection: React.FC = () => {
                       size="sm"
                       onClick={() => {
                         togglePaperSelect(paper.id);
-                        navigate(`/research/${id || currentProject?.id || 'proj-healthcare-ai'}/analysis`);
+                        const targetProjId = id || currentProject?.id;
+                        navigate(targetProjId ? `/research/${targetProjId}/analysis` : '/research/new');
                       }}
                       className="h-8 text-xs gap-1"
                     >
@@ -386,8 +420,7 @@ export const PaperCollection: React.FC = () => {
                     </a>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
+            </div>
           );
         })}
 
@@ -408,14 +441,45 @@ export const PaperCollection: React.FC = () => {
 
         {/* Empty State */}
         {!isDiscovering && filteredPapers.length === 0 && (
-          <div className="p-8 text-center bg-card rounded-xl border border-dashed border-border text-muted-foreground text-xs space-y-2">
+          <div className="p-8 text-center bg-card rounded-xl border border-dashed border-border text-muted-foreground text-xs space-y-3">
             <BookOpen className="w-8 h-8 mx-auto text-muted-foreground/50" />
             <p className="font-semibold text-foreground text-sm">
-              No relevant research papers were found.
+              {papers.length > 0
+                ? "No papers match your current filters."
+                : "No relevant research papers loaded yet."}
             </p>
             <p className="text-muted-foreground max-w-md mx-auto">
-              Try a broader research topic or different keywords.
+              {papers.length > 0
+                ? "Try clearing your keyword filter or adjusting repository and year selections."
+                : "Ready to fetch and synthesize academic papers from arXiv, Semantic Scholar, and Crossref for your research topic."}
             </p>
+            <div className="pt-2">
+              {papers.length > 0 ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setSearchQuery(currentProject?.topic || lastSearchedTopic || '');
+                    setSelectedSource('all');
+                    setSelectedYear('all');
+                  }}
+                  className="gap-2 mx-auto shadow-xs"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  <span>Reset Filter Criteria</span>
+                </Button>
+              ) : (
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={handleDiscoverSearch}
+                  className="gap-2 mx-auto shadow-xs"
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>Discover Papers for "{currentProject?.topic || searchQuery || 'Research Topic'}"</span>
+                </Button>
+              )}
+            </div>
           </div>
         )}
       </div>
@@ -486,7 +550,8 @@ export const PaperCollection: React.FC = () => {
                 onClick={() => {
                   togglePaperSelect(activeModalPaper.id);
                   setActiveModalPaper(null);
-                  navigate(`/research/${id || currentProject?.id || 'proj-healthcare-ai'}/analysis`);
+                  const targetProjId = id || currentProject?.id;
+                  navigate(targetProjId ? `/research/${targetProjId}/analysis` : '/research/new');
                 }}
                 className="gap-1.5"
               >
