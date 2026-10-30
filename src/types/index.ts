@@ -592,6 +592,16 @@ export interface ResearchProject {
   starred?: boolean;
 }
 
+export interface ResearchCitation {
+  paper_title: string;
+  authors?: string;
+  publication_year?: string | number;
+  page_number?: number | null;
+  source_type?: string;
+  excerpt?: string;
+  relevance_score?: number;
+}
+
 export interface AIChatMessage {
   id: string;
   sender: 'user' | 'assistant';
@@ -599,6 +609,41 @@ export interface AIChatMessage {
   timestamp: string;
   suggestedActions?: string[];
   isStreaming?: boolean;
+  citations?: ResearchCitation[];
+  telemetry?: {
+    iterations?: number;
+    evidence_count?: number;
+    evidence_score?: number;
+    plan?: any;
+  };
+  isValidResearch?: boolean;
+  error?: string;
+}
+
+export type VoiceModelEngine = 
+  | 'openai-tts-1-hd' 
+  | 'gemini-live-audio' 
+  | 'elevenlabs-v2' 
+  | 'deepgram-aura' 
+  | 'browser-speech-api';
+
+export interface VoicePersona {
+  id: string;
+  name: string;
+  engine: VoiceModelEngine;
+  gender: 'Female' | 'Male' | 'Neutral';
+  description: string;
+  tone: string;
+  sampleText?: string;
+}
+
+export interface VoiceSettings {
+  enabled: boolean;
+  engine: VoiceModelEngine;
+  voiceId: string;
+  speechRate: number; // 0.75 - 1.5
+  pitch: number; // 0.8 - 1.2
+  autoReadResponses: boolean;
 }
 
 export interface UserSettings {
@@ -620,6 +665,7 @@ export interface UserSettings {
     summaryLength: 'concise' | 'balanced' | 'comprehensive';
     autoCite: boolean;
   };
+  voice: VoiceSettings;
   research: {
     defaultPaperCount: number;
     defaultYearRange: [number, number];

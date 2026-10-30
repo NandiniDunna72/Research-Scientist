@@ -57,7 +57,7 @@ export const PaperAnalysis: React.FC = () => {
   const initialPaperId = validPapers.find((p) => p.selected)?.id || validPapers[0]?.id || '';
 
   const [selectedPaperId, setSelectedPaperId] = useState<string>(initialPaperId);
-  const [activeTab, setActiveTab] = useState<TabKey>('overview');
+  const [activeTab, setActiveTab] = useState<TabKey>('literature');
   const [analysis, setAnalysis] = useState<PaperAnalysisType | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [loadingStage, setLoadingStage] = useState<string>('');
@@ -260,12 +260,12 @@ export const PaperAnalysis: React.FC = () => {
   );
 
   const tabs: { key: TabKey; label: string; icon: React.FC<{ className?: string }> }[] = [
+    { key: 'literature', label: 'Individual Literature', icon: Layers },
+    { key: 'methodology', label: 'Individual Methodology', icon: Cpu },
     { key: 'overview', label: 'Overview', icon: BookOpen },
     { key: 'abstract', label: 'Abstract', icon: FileText },
     { key: 'summary', label: 'Summary & Impact', icon: CheckCircle2 },
     { key: 'gaps', label: 'Research Gaps', icon: AlertCircle },
-    { key: 'literature', label: 'Literature Review', icon: Layers },
-    { key: 'methodology', label: 'Methodology', icon: Cpu },
   ];
 
   if (validPapers.length === 0 || !activePaper) {
@@ -310,6 +310,46 @@ export const PaperAnalysis: React.FC = () => {
           <p className="text-xs sm:text-sm text-muted-foreground mt-1">
             Structured decomposition across contributions, research gaps, and methodologies
           </p>
+        </div>
+      </div>
+
+      {/* Contextual Scope Clarification Banner */}
+      <div className="p-3.5 rounded-2xl bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-transparent border border-indigo-500/20 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-xs">
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-xl bg-indigo-500/20 text-indigo-400 shrink-0">
+            <BookOpen className="w-4 h-4" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-foreground">Individual Paper Deep-Dive</span>
+              <Badge variant="indigo" size="sm">Single Paper Scope</Badge>
+            </div>
+            <p className="text-[11.5px] text-muted-foreground mt-0.5">
+              Extracts the specific literature review, methodology, and empirical evidence for this individual paper.
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 shrink-0 text-xs">
+          <span className="text-[11px] text-muted-foreground hidden lg:inline">Synthesize all papers:</span>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate(currentProject ? `/research/${currentProject.id}/literature` : '/research')}
+            className="text-xs gap-1.5 h-8 rounded-xl border-indigo-500/30 hover:bg-indigo-500/10 text-indigo-400 font-semibold"
+          >
+            <Layers className="w-3.5 h-3.5" />
+            <span>All Papers Literature</span>
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate(currentProject ? `/research/${currentProject.id}/methodology` : '/research')}
+            className="text-xs gap-1.5 h-8 rounded-xl border-purple-500/30 hover:bg-purple-500/10 text-purple-400 font-semibold"
+          >
+            <Cpu className="w-3.5 h-3.5" />
+            <span>All Papers Methodology</span>
+          </Button>
         </div>
       </div>
 
@@ -789,25 +829,36 @@ export const PaperAnalysis: React.FC = () => {
                       </div>
                     )}
 
-                    {/* TAB: LITERATURE REVIEW */}
+                    {/* TAB: LITERATURE REVIEW (INDIVIDUAL PAPER) */}
                     {activeTab === 'literature' && (
                       <div className="space-y-4">
+                        <div className="p-4 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-between gap-3">
+                          <div className="flex items-center gap-2.5">
+                            <Layers className="w-4 h-4 text-indigo-400 shrink-0" />
+                            <div>
+                              <h4 className="text-xs font-bold text-foreground">Individual Paper Literature Review</h4>
+                              <p className="text-[11px] text-muted-foreground">Theoretical framework, prior foundations, and academic debates specific to this manuscript.</p>
+                            </div>
+                          </div>
+                          <Badge variant="indigo" size="sm">Single Paper Scope</Badge>
+                        </div>
+
                         <div className="p-3.5 rounded-xl border border-border bg-card space-y-1.5">
-                          <span className="font-bold text-foreground block">Theoretical Framework / Approach</span>
+                          <span className="font-bold text-foreground block">Theoretical Framework / Conceptual Approach</span>
                           <p className="text-muted-foreground leading-relaxed">
                             {analysis.approach || analysis.literatureReview.theoreticalFramework}
                           </p>
                         </div>
 
                         <div className="p-3.5 rounded-xl border border-border bg-card space-y-1.5">
-                          <span className="font-bold text-foreground block">Research Problem & Prior Foundation</span>
+                          <span className="font-bold text-foreground block">Research Problem & Prior Foundation in Literature</span>
                           <p className="text-muted-foreground leading-relaxed">
                             {analysis.researchProblem || analysis.literatureReview.relationToPriorWork}
                           </p>
                         </div>
 
                         <div className="p-3.5 rounded-xl border border-border bg-card space-y-2">
-                          <span className="font-bold text-foreground block">Research Questions & Academic Debates</span>
+                          <span className="font-bold text-foreground block">Key Academic Questions & Theoretical Debates Addressed</span>
                           <ul className="space-y-1.5">
                             {(analysis.researchQuestions && analysis.researchQuestions.length > 0
                               ? analysis.researchQuestions
@@ -820,12 +871,37 @@ export const PaperAnalysis: React.FC = () => {
                             ))}
                           </ul>
                         </div>
+
+                        {(analysis.contributions || analysis.summary?.keyContributions) && (
+                          <div className="p-3.5 rounded-xl border border-border bg-card space-y-2">
+                            <span className="font-bold text-foreground block">Scientific Contributions to the Literature</span>
+                            <ul className="space-y-1.5">
+                              {(analysis.contributions || analysis.summary.keyContributions).map((contrib, cIdx) => (
+                                <li key={cIdx} className="flex items-start gap-2 text-muted-foreground">
+                                  <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />
+                                  <span>{contrib}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
                       </div>
                     )}
 
-                    {/* TAB: METHODOLOGY */}
+                    {/* TAB: METHODOLOGY (INDIVIDUAL PAPER) */}
                     {activeTab === 'methodology' && (
                       <div className="space-y-3.5">
+                        <div className="p-4 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-between gap-3">
+                          <div className="flex items-center gap-2.5">
+                            <Cpu className="w-4 h-4 text-purple-400 shrink-0" />
+                            <div>
+                              <h4 className="text-xs font-bold text-foreground">Individual Paper Methodology & Architecture</h4>
+                              <p className="text-[11px] text-muted-foreground">System design, algorithms, preprocessing, and benchmark metrics specific to this manuscript.</p>
+                            </div>
+                          </div>
+                          <Badge variant="indigo" size="sm">Single Paper Scope</Badge>
+                        </div>
+
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                           <div className="p-3 rounded-lg border border-border bg-card space-y-1">
                             <span className="text-[11px] font-semibold text-muted-foreground uppercase">Dataset / Data Source</span>

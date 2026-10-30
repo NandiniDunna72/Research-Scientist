@@ -37,32 +37,32 @@
 
   html.dark,
   .dark {
-    --background: 224 45% 6%;
+    --background: 235 55% 5%;
     --foreground: 210 40% 98%;
 
-    --card: 224 40% 9%;
+    --card: 235 45% 7.5%;
     --card-foreground: 210 40% 98%;
 
-    --popover: 224 40% 9%;
+    --popover: 235 45% 7.5%;
     --popover-foreground: 210 40% 98%;
 
     --primary: 239 84% 67%;
     --primary-foreground: 224 71% 4%;
 
-    --secondary: 222 35% 14%;
+    --secondary: 230 35% 12%;
     --secondary-foreground: 210 40% 98%;
 
-    --muted: 222 35% 14%;
+    --muted: 230 30% 13%;
     --muted-foreground: 215 20% 68%;
 
-    --accent: 222 35% 14%;
+    --accent: 230 35% 12%;
     --accent-foreground: 210 40% 98%;
 
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 222 30% 16%;
-    --input: 222 30% 16%;
+    --border: 230 35% 17%;
+    --input: 230 35% 17%;
     --ring: 239 84% 67%;
   }
 }
@@ -173,26 +173,27 @@
 
 /* Gradient typography */
 .gradient-heading {
-  @apply bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-800 dark:from-white dark:via-indigo-100 dark:to-slate-300 bg-clip-text text-transparent;
+  @apply bg-gradient-to-r from-white via-cyan-100 to-indigo-200 bg-clip-text text-transparent font-extrabold;
+  text-shadow: 0 0 25px rgba(6, 182, 212, 0.25);
 }
 
 .gradient-text-indigo {
-  @apply bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-600 dark:from-indigo-400 dark:via-purple-300 dark:to-pink-400 bg-clip-text text-transparent;
+  @apply bg-gradient-to-r from-cyan-400 via-indigo-300 to-fuchsia-400 bg-clip-text text-transparent;
 }
 
 .gradient-text-emerald {
-  @apply bg-gradient-to-r from-emerald-600 to-teal-500 dark:from-emerald-400 dark:to-teal-300 bg-clip-text text-transparent;
+  @apply bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent;
 }
 
-/* Luxury Glassmorphic Cards */
+/* Luxury Glassmorphic Cyber Cards */
 .card-premium {
-  @apply relative rounded-2xl border border-border/80 bg-card/85 backdrop-blur-xl transition-all duration-300;
-  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.04), 0 2px 6px -1px rgba(0, 0, 0, 0.02);
+  @apply relative rounded-2xl border border-[#1a2044] bg-[#0a0d24]/90 backdrop-blur-xl transition-all duration-300;
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.5), 0 0 20px rgba(6, 182, 212, 0.06);
 }
 
 .card-premium:hover {
-  @apply border-indigo-400/60 dark:border-indigo-500/50 -translate-y-0.5;
-  box-shadow: 0 16px 36px -10px rgba(99, 102, 241, 0.16), 0 0 0 1px rgba(99, 102, 241, 0.12);
+  @apply border-cyan-500/50 -translate-y-0.5;
+  box-shadow: 0 16px 40px -10px rgba(0, 0, 0, 0.6), 0 0 30px rgba(6, 182, 212, 0.18);
 }
 
 .card-glow-indigo {
@@ -206,7 +207,7 @@
   left: 0;
   right: 0;
   height: 2px;
-  background: linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.9), rgba(168, 85, 247, 0.9), transparent);
+  background: linear-gradient(90deg, transparent, rgba(0, 240, 255, 0.9), rgba(217, 70, 239, 0.9), transparent);
   pointer-events: none;
 }
 
@@ -274,3 +275,193 @@
 .btn-ai-glow:hover::after {
   opacity: 1;
 }
+
+/* ==========================================================================
+   Cyberpunk Hologram & Sci-Fi Aesthetic Elements
+   ========================================================================== */
+
+/* Active Sidebar Pill: Radiant Violet-to-Magenta with Neon Glow */
+.neon-pill-active {
+  background: linear-gradient(135deg, #6d28d9 0%, #9333ea 50%, #c026d3 100%);
+  box-shadow: 0 0 22px rgba(168, 85, 247, 0.45), inset 0 1px 1px rgba(255, 255, 255, 0.25);
+  border: 1px solid rgba(216, 180, 254, 0.5);
+  color: #ffffff !important;
+}
+
+/* Cyan Glowing Border & Card */
+.neon-border-cyan {
+  border: 1px solid rgba(6, 182, 212, 0.4);
+  box-shadow: 0 0 15px rgba(6, 182, 212, 0.15);
+}
+
+.neon-border-cyan:hover {
+  border-color: rgba(6, 182, 212, 0.7);
+  box-shadow: 0 0 25px rgba(6, 182, 212, 0.28);
+}
+
+/* Purple Glowing Border */
+.neon-border-purple {
+  border: 1px solid rgba(168, 85, 247, 0.4);
+  box-shadow: 0 0 15px rgba(168, 85, 247, 0.15);
+}
+
+/* High-Tech Project Card */
+.neon-card-project {
+  background: rgba(10, 13, 34, 0.88);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(6, 182, 212, 0.25);
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.5), 0 0 25px rgba(6, 182, 212, 0.08);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.neon-card-project:hover {
+  border-color: rgba(6, 182, 212, 0.6);
+  box-shadow: 0 15px 40px -5px rgba(0, 0, 0, 0.6), 0 0 35px rgba(6, 182, 212, 0.2);
+  transform: translateY(-2px);
+}
+
+/* Radiant Magenta to Cyan Button */
+.btn-ai-glow-cyan-magenta {
+  background: linear-gradient(135deg, #d946ef 0%, #8b5cf6 50%, #06b6d4 100%);
+  box-shadow: 0 0 22px rgba(217, 70, 239, 0.55), 0 0 12px rgba(6, 182, 212, 0.35);
+  transition: all 0.25s ease;
+}
+
+.btn-ai-glow-cyan-magenta:hover {
+  box-shadow: 0 0 32px rgba(217, 70, 239, 0.75), 0 0 18px rgba(6, 182, 212, 0.55);
+  transform: translateY(-1px);
+}
+
+/* Glowing Blue Circular Arrow Button */
+.btn-blue-circle {
+  background: #2563eb;
+  box-shadow: 0 0 14px rgba(37, 99, 235, 0.6);
+  transition: all 0.2s ease;
+}
+
+.btn-blue-circle:hover {
+  background: #3b82f6;
+  box-shadow: 0 0 22px rgba(59, 130, 246, 0.85);
+  transform: scale(1.08);
+}
+
+/* ==========================================================================
+   Advanced Holographic HUD & Micro-Animation System
+   ========================================================================== */
+
+/* Keyframe Animations */
+@keyframes cyberScan {
+  0% { transform: translateY(-100%); opacity: 0; }
+  50% { opacity: 0.8; }
+  100% { transform: translateY(1000%); opacity: 0; }
+}
+
+@keyframes floatSlow {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-6px); }
+}
+
+@keyframes neonPulseGlow {
+  0%, 100% { opacity: 0.7; filter: drop-shadow(0 0 8px rgba(6, 182, 212, 0.5)); }
+  50% { opacity: 1; filter: drop-shadow(0 0 16px rgba(6, 182, 212, 0.9)); }
+}
+
+@keyframes holographicSweep {
+  0% { transform: translateX(-100%) rotate(45deg); }
+  100% { transform: translateX(200%) rotate(45deg); }
+}
+
+.animate-float-slow {
+  animation: floatSlow 4s ease-in-out infinite;
+}
+
+.animate-neon-pulse {
+  animation: neonPulseGlow 2.5s ease-in-out infinite;
+}
+
+/* Cyber Tab Buttons */
+.cyber-tab-btn {
+  @apply relative px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all duration-200 border;
+}
+
+.cyber-tab-btn-active {
+  @apply bg-gradient-to-r from-violet-600/30 via-indigo-600/30 to-cyan-500/25 border-cyan-400/60 text-cyan-200;
+  box-shadow: 0 0 16px rgba(6, 182, 212, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.15);
+}
+
+.cyber-tab-btn-inactive {
+  @apply border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-800/40;
+}
+
+/* Cyber Scanning Line */
+.cyber-scanline {
+  position: relative;
+  overflow: hidden;
+}
+
+.cyber-scanline::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(6, 182, 212, 0.8), rgba(217, 70, 239, 0.8), transparent);
+  animation: cyberScan 6s linear infinite;
+  pointer-events: none;
+}
+
+/* HUD Corner Reticle Decorators */
+.hud-corner-box {
+  position: relative;
+}
+
+.hud-corner-box::before,
+.hud-corner-box::after {
+  content: '';
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-color: rgba(6, 182, 212, 0.5);
+  pointer-events: none;
+}
+
+.hud-corner-box::before {
+  top: -1px;
+  left: -1px;
+  border-top: 2px solid rgba(6, 182, 212, 0.7);
+  border-left: 2px solid rgba(6, 182, 212, 0.7);
+}
+
+.hud-corner-box::after {
+  bottom: -1px;
+  right: -1px;
+  border-bottom: 2px solid rgba(6, 182, 212, 0.7);
+  border-right: 2px solid rgba(6, 182, 212, 0.7);
+}
+
+/* High-Tech Futuristic Table */
+.cyber-table {
+  @apply w-full text-xs text-left border-collapse rounded-xl overflow-hidden;
+}
+
+.cyber-table th {
+  @apply border-b border-[#1f294d] bg-[#0c102a] text-cyan-300 font-mono uppercase tracking-wider p-3;
+}
+
+.cyber-table td {
+  @apply border-b border-[#141b3d] p-3 text-slate-300 transition-colors;
+}
+
+.cyber-table tr:hover td {
+  @apply bg-cyan-950/20 text-white;
+}
+
+/* Glowing metric readouts */
+.telemetry-value {
+  @apply font-mono text-cyan-400 font-bold tracking-tight;
+  text-shadow: 0 0 10px rgba(6, 182, 212, 0.4);
+}
+
+

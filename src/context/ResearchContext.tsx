@@ -65,7 +65,7 @@ export const ResearchProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [isAIAssistantOpen, setIsAIAssistantOpen] = useState(false);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [theme, setThemeState] = useState<'light' | 'dark' | 'system'>('light');
+  const [theme, setThemeState] = useState<'light' | 'dark' | 'system'>('dark');
 
   // Load initial data
   useEffect(() => {
@@ -166,8 +166,24 @@ export const ResearchProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const loadProjectPapers = async (projectId: string): Promise<ResearchPaper[]> => {
     try {
       const p = await researchService.getPapers(projectId);
-      setPapers(p);
-      return p;
+      if (p && p.length > 0) {
+        setPapers(p);
+        return p;
+      }
+      // Check cached discovered papers for this project in localStorage
+      const cached = localStorage.getItem(`ai_project_papers_${projectId}`);
+      if (cached) {
+        try {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setPapers(parsed);
+            return parsed;
+          }
+        } catch {}
+      }
+      // If papers are already present in memory for this session, preserve them
+      setPapers((prev) => (prev.length > 0 ? prev : []));
+      return [];
     } catch (err) {
       console.warn('Failed to load papers for project:', err);
       return [];
@@ -255,6 +271,11 @@ export const ResearchProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     try {
       const { papers: discoveredList, message } = await paperService.searchPapers(query, limit);
       setPapers(discoveredList);
+      if (currentProject?.id) {
+        try {
+          localStorage.setItem(`ai_project_papers_${currentProject.id}`, JSON.stringify(discoveredList));
+        } catch {}
+      }
       setIsDiscovering(false);
       if (discoveredList.length > 0) {
         addToast({

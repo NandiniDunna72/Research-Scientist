@@ -10,21 +10,21 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = 'primary', size = 'md', isLoading, disabled, children, ...props }, ref) => {
-    const baseStyles = "inline-flex items-center justify-center font-medium rounded-lg transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-primary disabled:opacity-50 disabled:pointer-events-none select-none active:scale-[0.98]";
+    const baseStyles = "inline-flex items-center justify-center font-semibold rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-cyan-500/40 disabled:opacity-50 disabled:pointer-events-none select-none active:scale-[0.98] cursor-pointer";
 
     const variants = {
-      primary: "bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm shadow-indigo-500/20 dark:bg-indigo-600 dark:hover:bg-indigo-500",
-      secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-      outline: "border border-border bg-card text-foreground hover:bg-accent hover:text-accent-foreground",
-      ghost: "text-foreground hover:bg-accent/60 hover:text-accent-foreground",
-      destructive: "bg-red-600 text-white hover:bg-red-700 shadow-sm shadow-red-500/20",
-      subtle: "bg-indigo-50 text-indigo-700 hover:bg-indigo-100 dark:bg-indigo-950/50 dark:text-indigo-300 dark:hover:bg-indigo-900/60",
+      primary: "bg-gradient-to-r from-cyan-500 via-indigo-600 to-purple-600 hover:from-cyan-400 hover:via-indigo-500 hover:to-purple-500 text-white shadow-[0_0_15px_rgba(6,182,212,0.35)] hover:shadow-[0_0_22px_rgba(6,182,212,0.55)] border border-cyan-400/40",
+      secondary: "bg-[#101436] text-slate-200 border border-[#1e2548] hover:bg-[#151c4a] hover:border-cyan-500/40 hover:text-white shadow-xs",
+      outline: "border border-[#1e2548] bg-[#0c102a]/80 text-slate-300 hover:border-cyan-500/50 hover:text-white hover:bg-[#121638]",
+      ghost: "text-slate-300 hover:text-white hover:bg-[#121638]",
+      destructive: "bg-rose-600/90 text-white hover:bg-rose-600 shadow-[0_0_14px_rgba(225,29,72,0.4)] border border-rose-500/40",
+      subtle: "bg-[#12173d] text-cyan-300 border border-cyan-500/30 hover:border-cyan-400 hover:bg-[#182052] shadow-[0_0_8px_rgba(6,182,212,0.15)]",
     };
 
     const sizes = {
       sm: "h-8 px-3 text-xs gap-1.5",
-      md: "h-9.5 px-4 text-sm gap-2",
-      lg: "h-11 px-5 text-base gap-2.5",
+      md: "h-9.5 px-4 text-xs sm:text-sm gap-2",
+      lg: "h-11 px-5 text-sm sm:text-base gap-2.5",
       icon: "h-9 w-9 p-0",
     };
 

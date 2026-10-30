@@ -57,38 +57,40 @@ export const ResearchStepper: React.FC = () => {
   const progressPercent = Math.round(((activeIndex + 1) / steps.length) * 100);
 
   return (
-    <div className="bg-card/75 dark:bg-card/70 backdrop-blur-xl border-b border-border/80 px-4 sm:px-6 py-3 transition-colors shadow-2xs sticky top-16 z-20">
+    <div className="bg-[#0a0d24]/90 dark:bg-[#07091c]/95 backdrop-blur-2xl border-b border-[#1a2044] px-4 sm:px-6 py-3 transition-colors shadow-lg sticky top-16 z-20">
       <div className="max-w-7xl mx-auto space-y-2.5">
         {/* Project Header Info & Progress Bar */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
           <div className="flex items-center gap-2.5 min-w-0">
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-gradient-to-r from-indigo-500/15 to-purple-500/15 border border-indigo-500/30 text-indigo-700 dark:text-indigo-300 text-[11px] font-bold shrink-0">
-              <FolderOpen className="w-3.5 h-3.5 text-indigo-500" />
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#101436] border border-cyan-500/40 text-cyan-300 text-[11px] font-bold shrink-0 shadow-[0_0_10px_rgba(6,182,212,0.15)]">
+              <FolderOpen className="w-3.5 h-3.5 text-cyan-400" />
               <span>Project</span>
             </span>
-            <span className="font-extrabold text-xs sm:text-sm text-foreground truncate max-w-xs sm:max-w-md font-heading tracking-tight">
+            <span className="font-extrabold text-xs sm:text-sm text-white truncate max-w-xs sm:max-w-md font-heading tracking-tight">
               {currentProject.title}
             </span>
-            <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/40 shrink-0 hidden sm:block" />
-            <span className="text-xs text-muted-foreground hidden sm:inline-flex items-center gap-1.5">
+            <ChevronRight className="w-3.5 h-3.5 text-slate-500 shrink-0 hidden sm:block" />
+            <span className="text-xs text-slate-400 hidden sm:inline-flex items-center gap-1.5">
               <span>Stage:</span>
-              <strong className="text-foreground font-semibold px-2 py-0.5 rounded-md bg-secondary/60 text-[11px] font-mono">{currentStep.name}</strong>
+              <strong className="text-cyan-300 font-semibold px-2 py-0.5 rounded-md bg-[#11173d] border border-cyan-500/30 text-[11px] font-mono shadow-[0_0_8px_rgba(6,182,212,0.15)]">
+                {currentStep.name}
+              </strong>
             </span>
           </div>
 
           <div className="flex items-center gap-3 shrink-0">
-            <span className="text-[11px] text-muted-foreground font-mono">
-              Stage <strong className="text-foreground">{activeIndex + 1}</strong> of <strong className="text-foreground">{steps.length}</strong>
+            <span className="text-[11px] text-slate-400 font-mono">
+              Stage <strong className="text-cyan-300 font-bold">{activeIndex + 1}</strong> of <strong className="text-white">{steps.length}</strong>
             </span>
-            <div className="w-24 sm:w-32 bg-secondary/80 h-2 rounded-full overflow-hidden border border-border/60 relative">
+            <div className="w-24 sm:w-36 bg-[#0f1430] h-2 rounded-full overflow-hidden border border-cyan-500/20 relative shadow-[inset_0_0_6px_rgba(0,0,0,0.6)]">
               <div 
-                className="bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-600 h-full rounded-full transition-all duration-300 shadow-glow-xs relative"
+                className="bg-gradient-to-r from-cyan-400 via-indigo-500 to-fuchsia-500 h-full rounded-full transition-all duration-300 shadow-[0_0_10px_#22d3ee] relative"
                 style={{ width: `${progressPercent}%` }}
               >
-                <div className="absolute right-0 top-0 bottom-0 w-1.5 bg-white/70 rounded-full animate-pulse" />
+                <div className="absolute right-0 top-0 bottom-0 w-1.5 bg-white rounded-full animate-pulse shadow-[0_0_4px_#ffffff]" />
               </div>
             </div>
-            <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400 font-mono min-w-[32px]">
+            <span className="text-xs font-bold text-cyan-300 font-mono min-w-[32px]">
               {progressPercent}%
             </span>
           </div>
@@ -106,12 +108,12 @@ export const ResearchStepper: React.FC = () => {
                 <button
                   onClick={() => navigate(step.path)}
                   className={cn(
-                    "flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition-all duration-200 select-none group",
+                    "flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition-all duration-200 select-none group cursor-pointer",
                     isCurrent
-                      ? "bg-gradient-to-r from-indigo-600 to-indigo-700 text-white shadow-glow-sm font-bold scale-[1.02]"
+                      ? "bg-gradient-to-r from-[#6d28d9] via-[#9333ea] to-[#06b6d4] text-white shadow-[0_0_16px_rgba(6,182,212,0.45)] border border-cyan-400/50 font-bold scale-[1.02]"
                       : isCompleted
-                      ? "bg-secondary/60 text-foreground hover:bg-secondary hover:text-indigo-600 dark:hover:text-indigo-400 border border-border/50"
-                      : "text-muted-foreground/70 hover:text-foreground hover:bg-secondary/40 cursor-pointer border border-transparent"
+                      ? "bg-[#0d1334]/80 text-cyan-200 hover:text-white hover:bg-[#131c4a] border border-cyan-500/30 hover:border-cyan-400/60 shadow-[0_0_8px_rgba(6,182,212,0.1)]"
+                      : "text-slate-400 hover:text-white hover:bg-[#121638] border border-transparent"
                   )}
                 >
                   <span className={cn(
@@ -119,11 +121,11 @@ export const ResearchStepper: React.FC = () => {
                     isCurrent 
                       ? "bg-white/20 text-white" 
                       : isCompleted 
-                      ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400" 
-                      : "bg-muted text-muted-foreground group-hover:bg-secondary"
+                      ? "bg-cyan-500/20 text-cyan-300" 
+                      : "bg-[#11173d] text-slate-400 group-hover:bg-[#161f52]"
                   )}>
                     {isCompleted ? (
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                      <CheckCircle2 className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
                     ) : (
                       idx + 1
                     )}
@@ -131,7 +133,7 @@ export const ResearchStepper: React.FC = () => {
                   <span>{step.name}</span>
                 </button>
                 {idx < steps.length - 1 && (
-                  <div className="w-2 h-px bg-border/60 shrink-0 hidden sm:block" />
+                  <div className="w-2 h-px bg-[#1a2044] shrink-0 hidden sm:block" />
                 )}
               </React.Fragment>
             );

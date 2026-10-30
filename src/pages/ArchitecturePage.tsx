@@ -9,22 +9,11 @@ import {
   Download,
   RefreshCw,
   Layers,
-  Database,
-  ShieldCheck,
-  Server,
-  Compass,
-  GitBranch,
-  Calendar,
-  CheckCircle2,
-  AlertTriangle,
   Info,
+  AlertTriangle,
   ChevronRight,
-  Cpu,
   ArrowRight,
-  HardDrive,
   Workflow,
-  ExternalLink,
-  BookOpen,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
@@ -187,9 +176,9 @@ export const ArchitecturePage: React.FC = () => {
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
-              System Architecture Generation
+              Architecture
             </h1>
-            <Badge variant="indigo" size="md">Module 8</Badge>
+            <Badge variant="indigo" size="md">Module 9</Badge>
           </div>
           <p className="text-xs text-muted-foreground mt-0.5">
             Transform research questions and methodologies into concrete, technically feasible system architectures.
@@ -223,17 +212,23 @@ export const ArchitecturePage: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border/80">
         <div>
           <div className="flex flex-wrap items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-[#0a0d26] border border-cyan-400/50 flex items-center justify-center text-cyan-300 shadow-[0_0_18px_rgba(6,182,212,0.4)]">
+              <Network className="w-5 h-5 animate-neon-pulse" />
+            </div>
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight font-heading gradient-heading">
-              {architecture.architecture_title}
+              Architecture
             </h1>
-            <Badge variant="indigo" size="md" className="font-semibold shadow-glow-xs">
+            <Badge variant="indigo" size="md" className="border-cyan-400/40 text-cyan-300 font-mono">
+              Module 9
+            </Badge>
+            <Badge variant="outline" size="sm" className="font-mono text-slate-300 border-slate-700">
               {architecture.architecture_type}
             </Badge>
-            <Badge variant="outline" size="sm" className="font-mono text-xs">
-              Module 8
-            </Badge>
           </div>
-          <p className="text-xs sm:text-sm text-muted-foreground mt-1.5 max-w-4xl leading-relaxed">
+          <p className="text-sm font-semibold text-slate-200 mt-2 font-heading">
+            {architecture.architecture_title}
+          </p>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 max-w-4xl leading-relaxed">
             {architecture.architecture_summary}
           </p>
         </div>
@@ -245,28 +240,26 @@ export const ArchitecturePage: React.FC = () => {
             size="sm"
             onClick={handleRegenerate}
             disabled={isGenerating}
-            className="text-xs gap-2 h-9 font-medium border-border/80 hover:bg-secondary/80"
+            className="text-xs gap-2 h-9 font-medium border-cyan-500/30 text-cyan-300 hover:bg-cyan-500/10"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${isGenerating ? 'animate-spin text-indigo-500' : ''}`} />
+            <RefreshCw className={`w-3.5 h-3.5 ${isGenerating ? 'animate-spin text-cyan-400' : ''}`} />
             <span>Regenerate</span>
           </Button>
 
-          <Button
-            variant="primary"
-            size="sm"
+          <button
             onClick={handleExportJSON}
-            className="text-xs gap-2 h-9 font-semibold shadow-glow-xs hover:shadow-glow-sm px-4"
+            className="inline-flex items-center gap-2 h-9 px-4 rounded-xl text-xs font-semibold text-white btn-ai-glow-cyan-magenta shadow-lg active:scale-95 transition-all"
           >
             <Download className="w-3.5 h-3.5" />
             <span>Export JSON</span>
-          </Button>
+          </button>
         </div>
       </div>
 
       {/* Upstream Context Alerts */}
       {architecture.missing_upstream_context && architecture.missing_upstream_context.length > 0 && (
-        <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-900 dark:text-amber-200 text-xs flex items-start gap-2.5">
-          <Info className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+        <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs flex items-start gap-2.5">
+          <Info className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
           <div>
             <span className="font-semibold">Contextual Notice: </span>
             <span>
@@ -277,18 +270,12 @@ export const ArchitecturePage: React.FC = () => {
         </div>
       )}
 
-      {/* Navigation Tabs */}
-      <div className="flex overflow-x-auto border-b border-border gap-1 py-1 scrollbar-none">
+      {/* Navigation Tabs - Exclusively Architecture & Flow */}
+      <div className="flex overflow-x-auto border-b border-[#1b2245] gap-1.5 py-2 scrollbar-none">
         {[
-          { id: 'diagram', label: 'Architecture Diagram', icon: Network },
-          { id: 'components', label: `Components (${architecture.components.length})`, icon: Layers },
-          { id: 'dataflow', label: `Data Flow (${architecture.data_flow.length})`, icon: Workflow },
-          { id: 'techstack', label: 'Technology Stack', icon: Cpu },
-          { id: 'storage', label: 'Data Storage', icon: Database },
-          { id: 'deployment', label: 'Deployment & Security', icon: Server },
-          { id: 'justification', label: 'Justification & Trade-offs', icon: Compass },
-          { id: 'alternatives', label: 'Alternatives', icon: GitBranch },
-          { id: 'roadmap', label: 'Implementation Plan', icon: Calendar },
+          { id: 'diagram', label: 'Architecture Flow Diagram', icon: Network },
+          { id: 'dataflow', label: `Pipeline Flow (${architecture.data_flow.length} Stages)`, icon: Workflow },
+          { id: 'components', label: `Architecture Components (${architecture.components.length})`, icon: Layers },
         ].map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -296,13 +283,13 @@ export const ArchitecturePage: React.FC = () => {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-3.5 py-2 text-xs font-medium rounded-lg whitespace-nowrap transition-all ${
+              className={`flex items-center gap-2 px-4 py-2 text-xs rounded-xl whitespace-nowrap transition-all duration-200 ${
                 isActive
-                  ? 'bg-primary/10 text-primary font-semibold shadow-xs'
-                  : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                  ? 'bg-gradient-to-r from-violet-600/40 via-indigo-600/40 to-cyan-500/30 border border-cyan-400/60 text-cyan-200 shadow-[0_0_18px_rgba(6,182,212,0.35)] font-semibold scale-[1.02]'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 border border-transparent font-medium'
               }`}
             >
-              <Icon className="w-3.5 h-3.5" />
+              <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-cyan-300 animate-pulse' : 'text-slate-500'}`} />
               <span>{tab.label}</span>
             </button>
           );
@@ -312,18 +299,19 @@ export const ArchitecturePage: React.FC = () => {
       {/* TAB 1: ARCHITECTURE DIAGRAM */}
       {activeTab === 'diagram' && (
         <div className="space-y-4">
-          <Card className="card-premium rounded-2xl overflow-hidden">
-            <CardHeader className="pb-3 border-b border-border/60 bg-secondary/20">
+          <Card className="neon-card-project rounded-2xl overflow-hidden relative cyber-scanline">
+            <CardHeader className="pb-3 border-b border-cyan-500/20 bg-[#0c102a]/70">
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle className="text-base font-bold font-heading">
-                    Visual System Architecture
+                  <CardTitle className="text-base font-bold font-heading text-cyan-100 flex items-center gap-2">
+                    <Network className="w-4 h-4 text-cyan-400" />
+                    <span>Visual System Architecture</span>
                   </CardTitle>
-                  <CardDescription className="text-xs">
+                  <CardDescription className="text-xs text-slate-400">
                     Rendered Mermaid flowchart illustrating the multi-stage research solution and components
                   </CardDescription>
                 </div>
-                <Badge variant="indigo" size="sm" className="font-mono font-semibold">
+                <Badge variant="indigo" size="sm" className="font-mono font-semibold border-cyan-400/40 text-cyan-300">
                   {architecture.architecture_diagram.diagram_type.toUpperCase()}
                 </Badge>
               </div>
@@ -333,7 +321,7 @@ export const ArchitecturePage: React.FC = () => {
                 source={architecture.architecture_diagram.source}
                 title="System Architecture Diagram"
               />
-              <p className="text-xs text-muted-foreground mt-3 italic leading-relaxed">
+              <p className="text-xs text-slate-400 mt-3 italic leading-relaxed font-mono">
                 {architecture.architecture_diagram.description}
               </p>
             </CardContent>
@@ -472,378 +460,6 @@ export const ArchitecturePage: React.FC = () => {
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      {/* TAB 4: TECHNOLOGY STACK */}
-      {activeTab === 'techstack' && (
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {architecture.technology_stack.map((tech, idx) => (
-              <Card key={idx} className="border border-border shadow-xs">
-                <CardHeader className="pb-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
-                      {tech.category}
-                    </span>
-                    <Badge variant={tech.status === 'current' ? 'success' : 'outline'} size="sm" className="capitalize text-[10px]">
-                      {tech.status}
-                    </Badge>
-                  </div>
-                  <CardTitle className="text-sm font-bold text-foreground mt-1">
-                    {tech.technology}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2 text-xs">
-                  <div>
-                    <span className="font-semibold text-foreground">Role: </span>
-                    <span className="text-muted-foreground">{tech.role}</span>
-                  </div>
-                  <div>
-                    <span className="font-semibold text-foreground">Justification: </span>
-                    <span className="text-muted-foreground">{tech.reason_for_selection}</span>
-                  </div>
-                  {tech.alternatives && tech.alternatives.length > 0 && (
-                    <div className="pt-2 border-t border-border/50 text-[11px]">
-                      <span className="text-muted-foreground font-semibold">Alternatives: </span>
-                      <span className="font-mono text-muted-foreground">{tech.alternatives.join(', ')}</span>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* TAB 5: DATA STORAGE */}
-      {activeTab === 'storage' && (
-        <div className="space-y-4">
-          <Card className="border border-border shadow-xs">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="text-base font-semibold">Data Storage Paradigm</CardTitle>
-                  <CardDescription className="text-xs">
-                    {architecture.data_storage_design.storage_paradigm}
-                  </CardDescription>
-                </div>
-                <Database className="w-5 h-5 text-primary" />
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                {architecture.data_storage_design.description}
-              </p>
-
-              {/* Entities Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
-                {architecture.data_storage_design.entities.map((entity, idx) => (
-                  <div key={idx} className="p-3.5 rounded-xl border border-border bg-card/70 space-y-2 text-xs">
-                    <div className="flex items-center gap-2">
-                      <HardDrive className="w-4 h-4 text-primary" />
-                      <span className="font-mono font-bold text-foreground">{entity.entity_name}</span>
-                    </div>
-                    <p className="text-muted-foreground">{entity.purpose}</p>
-
-                    <div>
-                      <span className="font-semibold text-foreground block text-[11px] mb-1">Key Fields:</span>
-                      <div className="flex flex-wrap gap-1">
-                        {entity.fields.map((f, fIdx) => (
-                          <span key={fIdx} className="px-1.5 py-0.5 rounded bg-muted font-mono text-[10px]">
-                            {f}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-
-                    {entity.relationships.length > 0 && (
-                      <div className="pt-1 text-[11px] text-muted-foreground">
-                        <span className="font-semibold">Relations: </span>
-                        <span>{entity.relationships.join(' | ')}</span>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-
-              {/* Optional ER Diagram */}
-              {architecture.data_storage_design.er_diagram && (
-                <div className="pt-4 border-t border-border">
-                  <h4 className="text-xs font-semibold text-foreground mb-2">Entity-Relationship Diagram</h4>
-                  <MermaidViewer
-                    source={architecture.data_storage_design.er_diagram.source}
-                    title="ER Diagram"
-                  />
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      {/* TAB 6: DEPLOYMENT & RELIABILITY */}
-      {activeTab === 'deployment' && (
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Deployment Architecture */}
-            <Card className="border border-border shadow-xs">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base font-semibold flex items-center gap-2">
-                  <Server className="w-4 h-4 text-primary" />
-                  <span>Deployment Architecture</span>
-                </CardTitle>
-                <CardDescription className="text-xs">
-                  {architecture.deployment_architecture.deployment_model}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3 text-xs">
-                <div>
-                  <span className="font-semibold text-foreground block mb-0.5">Minimum Viable Hardware:</span>
-                  <p className="text-muted-foreground leading-relaxed">
-                    {architecture.deployment_architecture.minimum_viable_deployment}
-                  </p>
-                </div>
-
-                <div>
-                  <span className="font-semibold text-foreground block mb-0.5">Production Enhancements:</span>
-                  <p className="text-muted-foreground leading-relaxed">
-                    {architecture.deployment_architecture.production_enhancements}
-                  </p>
-                </div>
-
-                <div>
-                  <span className="font-semibold text-foreground block mb-1">Hosting Components:</span>
-                  <div className="flex flex-wrap gap-1">
-                    {architecture.deployment_architecture.hosting_components.map((h, idx) => (
-                      <span key={idx} className="px-2 py-0.5 rounded-md bg-muted text-[11px]">
-                        {h}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <span className="font-semibold text-foreground block mb-1">Environment Variables:</span>
-                  <div className="flex flex-wrap gap-1">
-                    {architecture.deployment_architecture.environment_configuration.map((e, idx) => (
-                      <span key={idx} className="px-2 py-0.5 rounded-md bg-secondary font-mono text-[10px]">
-                        {e}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <span className="font-semibold text-foreground block mb-0.5">Scaling Considerations:</span>
-                  <p className="text-muted-foreground leading-relaxed">
-                    {architecture.deployment_architecture.scaling_considerations}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Security & Reliability */}
-            <Card className="border border-border shadow-xs">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base font-semibold flex items-center gap-2">
-                  <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                  <span>Security & Reliability Safeguards</span>
-                </CardTitle>
-                <CardDescription className="text-xs">
-                  Mitigation strategies for data privacy, out-of-distribution drift, and access governance
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {architecture.security_and_reliability.map((sec, idx) => (
-                  <div key={idx} className="p-3 rounded-xl border border-border bg-card/60 space-y-1 text-xs">
-                    <span className="font-bold text-foreground block">{sec.dimension}</span>
-                    <p className="text-muted-foreground">{sec.description}</p>
-                    <div className="pt-1 text-[11px] text-emerald-700 dark:text-emerald-300">
-                      <span className="font-semibold">Mitigation: </span>
-                      <span>{sec.mitigation_strategy}</span>
-                    </div>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      )}
-
-      {/* TAB 7: JUSTIFICATION & TRADE-OFFS */}
-      {activeTab === 'justification' && (
-        <div className="space-y-4">
-          <Card className="border border-border shadow-xs">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base font-semibold">Architectural Justification & Trade-offs</CardTitle>
-              <CardDescription className="text-xs">
-                Scientific and engineering rationales connecting architecture choices to research gaps and questions
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {architecture.architecture_justification.map((just, idx) => (
-                <div key={idx} className="p-4 rounded-xl border border-border bg-card/60 space-y-2 text-xs">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <span className="font-bold text-sm text-foreground">{just.architectural_choice}</span>
-                    <div className="flex items-center gap-1">
-                      {just.related_question_ids.map((qid, qIdx) => (
-                        <Badge key={qIdx} variant="indigo" size="sm">
-                          Q{qid}
-                        </Badge>
-                      ))}
-                      {just.related_gap_ids.map((gid, gIdx) => (
-                        <Badge key={gIdx} variant="warning" size="sm">
-                          Gap {gid}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                  <div>
-                    <span className="font-semibold text-muted-foreground block text-[11px]">Objective / Gap Addressed:</span>
-                    <p className="text-foreground">{just.objective_or_gap}</p>
-                  </div>
-                  <div>
-                    <span className="font-semibold text-muted-foreground block text-[11px]">Justification:</span>
-                    <p className="text-muted-foreground leading-relaxed">{just.justification}</p>
-                  </div>
-                  <div className="p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-900 dark:text-amber-200 text-[11px]">
-                    <span className="font-semibold">Trade-offs & Constraints: </span>
-                    <span>{just.trade_offs}</span>
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      {/* TAB 8: ALTERNATIVE ARCHITECTURES */}
-      {activeTab === 'alternatives' && (
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {architecture.alternative_architectures.map((alt, idx) => (
-              <Card key={idx} className="border border-border shadow-xs">
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <CardTitle className="text-sm font-bold text-foreground">
-                      {alt.title}
-                    </CardTitle>
-                    <Badge variant="outline" size="sm">
-                      Complexity: {alt.complexity}
-                    </Badge>
-                  </div>
-                  <CardDescription className="text-xs leading-relaxed mt-1">
-                    {alt.description}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-3 text-xs">
-                  <div>
-                    <span className="font-semibold text-emerald-600 dark:text-emerald-400 block mb-1">Advantages:</span>
-                    <ul className="list-disc list-inside space-y-0.5 text-muted-foreground pl-1">
-                      {alt.advantages.map((adv, aIdx) => (
-                        <li key={aIdx}>{adv}</li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  <div>
-                    <span className="font-semibold text-rose-600 dark:text-rose-400 block mb-1">Disadvantages:</span>
-                    <ul className="list-disc list-inside space-y-0.5 text-muted-foreground pl-1">
-                      {alt.disadvantages.map((dis, dIdx) => (
-                        <li key={dIdx}>{dis}</li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  <div>
-                    <span className="font-semibold text-foreground block mb-0.5">Suitable Conditions:</span>
-                    <p className="text-muted-foreground">{alt.suitable_conditions}</p>
-                  </div>
-
-                  <div className="p-2.5 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-[11px]">
-                    <span className="font-semibold">Why Rejected: </span>
-                    <span>{alt.rejection_reason}</span>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* TAB 9: IMPLEMENTATION ROADMAP */}
-      {activeTab === 'roadmap' && (
-        <div className="space-y-4">
-          <Card className="border border-border shadow-xs">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base font-semibold">Practical Implementation Roadmap</CardTitle>
-              <CardDescription className="text-xs">
-                Sequential development stages for building the proposed research architecture
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="relative pl-6 space-y-6 before:absolute before:left-2.5 before:top-3 before:bottom-3 before:w-0.5 before:bg-border">
-                {architecture.implementation_plan.map((stage) => (
-                  <div key={stage.stage_number} className="relative group">
-                    <div className="absolute -left-[27px] top-1.5 w-6 h-6 rounded-full bg-indigo-600 text-white flex items-center justify-center text-xs font-bold shadow-xs">
-                      {stage.stage_number}
-                    </div>
-                    <div className="p-4 rounded-xl border border-border bg-card/60 space-y-2">
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <h4 className="font-bold text-sm text-foreground">
-                          {stage.stage_name}
-                        </h4>
-                        {stage.dependencies && stage.dependencies.length > 0 && (
-                          <div className="text-[11px] text-muted-foreground">
-                            <span>Prerequisites: </span>
-                            <span className="font-medium text-foreground">{stage.dependencies.join(', ')}</span>
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="pt-1">
-                        <span className="font-semibold text-muted-foreground block text-[11px] mb-1">Engineering Tasks:</span>
-                        <ul className="list-disc list-inside space-y-1 text-xs text-foreground pl-1">
-                          {stage.tasks.map((task, tIdx) => (
-                            <li key={tIdx}>{task}</li>
-                          ))}
-                        </ul>
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs pt-2 border-t border-border/50">
-                        <div>
-                          <span className="font-semibold text-muted-foreground block text-[11px]">Measurable Deliverable:</span>
-                          <p className="text-primary font-medium mt-0.5">{stage.deliverable}</p>
-                        </div>
-                        <div>
-                          <span className="font-semibold text-muted-foreground block text-[11px]">Verification Method:</span>
-                          <p className="text-foreground mt-0.5">{stage.verification_method}</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Limitations and Assumptions */}
-          <Card className="border border-border shadow-xs">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-semibold">Assumptions & System Boundaries</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
-                {architecture.limitations_and_assumptions.map((lim, idx) => (
-                  <div key={idx} className="p-3 rounded-xl border border-border bg-muted/40 space-y-1">
-                    <span className="font-bold text-foreground block">{lim.category}</span>
-                    <p className="text-muted-foreground leading-relaxed">{lim.description}</p>
                   </div>
                 ))}
               </div>

@@ -1,3 +1,42 @@
 import { ResearchProject } from '../types';
 
-export const mockProjects: ResearchProject[] = [];
+export const mockProjects: ResearchProject[] = [
+  {
+    id: 'proj-ambulance-opt',
+    title: 'AI based ambulance route optimization',
+    topic: 'AI based ambulance route optimization',
+    description: 'Autonomous multi-agent dynamic traffic prediction and priority route clearing for emergency vehicles using reinforcement learning and graph neural networks.',
+    domain: 'Healthcare & Biomedical AI',
+    keywords: ['Ambulance Routing', 'Emergency AI', 'Graph Neural Networks', 'Dynamic Dispatch', 'Reinforcement Learning'],
+    paperCount: 5,
+    yearRange: [2021, 2026],
+    preferredSources: ['IEEE Xplore', 'PubMed', 'Nature', 'arXiv'],
+    createdAt: '2026-10-25T08:30:00Z',
+    updatedAt: '2026-10-29T16:45:00Z',
+    progress: 100,
+    currentStage: 'papers',
+    papersCount: 5,
+    analyzedCount: 5,
+    gapsIdentifiedCount: 3,
+    starred: true,
+  },
+  {
+    id: 'proj-plant-disease',
+    title: 'plant disease prediction',
+    topic: 'plant disease prediction',
+    description: 'Deep multimodal vision transformers and bio-digital sequence modeling for rapid in-situ agricultural pathogen detection and crop yield preservation.',
+    domain: 'Climate Science & Energy Optimization',
+    keywords: ['Plant Pathology', 'Vision Transformers', 'Crop Diagnostics', 'Bio-digital Analysis', 'Deep Learning'],
+    paperCount: 5,
+    yearRange: [2021, 2026],
+    preferredSources: ['Nature', 'ScienceDirect', 'arXiv', 'IEEE Xplore'],
+    createdAt: '2026-10-24T10:15:00Z',
+    updatedAt: '2026-10-29T14:20:00Z',
+    progress: 100,
+    currentStage: 'papers',
+    papersCount: 5,
+    analyzedCount: 5,
+    gapsIdentifiedCount: 4,
+    starred: false,
+  },
+];

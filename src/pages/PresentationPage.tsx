@@ -28,9 +28,12 @@ import {
   Building,
   GraduationCap,
   Volume2,
+  VolumeX,
+  Square,
   ExternalLink,
   BookOpen,
   Info,
+  Palette,
 } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/Card';
@@ -38,6 +41,7 @@ import { Badge } from '../components/ui/Badge';
 import { Input } from '../components/ui/Input';
 import { Modal } from '../components/ui/Modal';
 import { LoadingState } from '../components/ui/LoadingState';
+import { voiceService } from '../services/voiceService';
 
 const presentationGenerationSteps = [
   'Extracting saved research manuscript & upstream module outputs...',
@@ -51,7 +55,7 @@ const presentationGenerationSteps = [
 export const PresentationPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { currentProject, addToast } = useResearch();
+  const { currentProject, addToast, settings } = useResearch();
 
   const projectId = id || currentProject?.id || '';
 
@@ -63,6 +67,33 @@ export const PresentationPage: React.FC = () => {
   const [isDownloading, setIsDownloading] = useState<boolean>(false);
   const [activeSlideIndex, setActiveSlideIndex] = useState<number>(0);
   const [isSlideshowOpen, setIsSlideshowOpen] = useState<boolean>(false);
+  const [isSpeakingSlide, setIsSpeakingSlide] = useState<boolean>(false);
+
+  useEffect(() => {
+    const unsub = voiceService.subscribeSpeaking(setIsSpeakingSlide);
+    return () => {
+      unsub();
+      voiceService.stop();
+    };
+  }, []);
+
+  const handleSpeakSlide = (notes?: string) => {
+    if (!notes) {
+      addToast({
+        type: 'info',
+        title: 'No Speaker Notes',
+        message: 'This slide does not contain oral delivery notes to narrate.',
+      });
+      return;
+    }
+    if (isSpeakingSlide) {
+      voiceService.stop();
+      setIsSpeakingSlide(false);
+    } else {
+      setIsSpeakingSlide(true);
+      voiceService.speak(notes, settings?.voice, () => setIsSpeakingSlide(false));
+    }
+  };
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
   const [editingSlide, setEditingSlide] = useState<Slide | null>(null);
   const [isSavingSlide, setIsSavingSlide] = useState<boolean>(false);
@@ -200,6 +231,30 @@ export const PresentationPage: React.FC = () => {
     }
   };
 
+  // Instant Theme Switcher
+  const handleQuickThemeChange = async (newTheme: string) => {
+    if (!config || !config.id) return;
+    setTheme(newTheme);
+    try {
+      const updated = await presentationService.updatePresentation(projectId, config.id, {
+        theme: newTheme,
+      });
+      setConfig(updated);
+      addToast({
+        type: 'success',
+        title: 'Theme Applied',
+        message: `PowerPoint re-compiled with '${newTheme}' template styling.`,
+      });
+    } catch (err: any) {
+      console.error('Failed to update theme:', err);
+      addToast({
+        type: 'error',
+        title: 'Theme Update Failed',
+        message: err.message || 'Could not apply theme.',
+      });
+    }
+  };
+
   // Open Slide Editor
   const handleOpenEditSlide = (slide: Slide, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
@@ -328,41 +383,46 @@ export const PresentationPage: React.FC = () => {
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Header Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-border">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#1b2245]">
         <div>
-          <div className="flex flex-wrap items-center gap-2.5">
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
-              <Presentation className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
-              <span>AI-Powered Research PPT Generation</span>
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-[#0a0d26] border border-cyan-400/50 flex items-center justify-center text-cyan-300 shadow-[0_0_18px_rgba(6,182,212,0.4)]">
+              <Presentation className="w-5 h-5 animate-neon-pulse" />
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight font-heading gradient-heading">
+              PPT Generation
             </h1>
+            <Badge variant="indigo" size="md" className="border-cyan-400/40 text-cyan-300 font-mono">
+              Module 11
+            </Badge>
             {config && (
               <>
-                <Badge variant="indigo" size="md">
+                <Badge variant="secondary" size="md" className="border-cyan-400/40 text-cyan-300 font-mono">
                   {config.slides.length} Slides
                 </Badge>
-                <Badge variant="outline" size="sm" className="font-mono">
+                <Badge variant="outline" size="sm" className="font-mono text-slate-300 border-slate-700">
                   {config.presentationType || config.presentation_type || 'Proposal'}
                 </Badge>
-                <Badge variant="secondary" size="sm">
+                <Badge variant="secondary" size="sm" className="text-fuchsia-300 border-fuchsia-500/30">
                   {config.theme || 'Professional Academic'}
                 </Badge>
               </>
             )}
           </div>
-          <p className="text-xs text-muted-foreground mt-1 max-w-3xl">
-            Converts your research project papers, gap analysis, methodology, architecture, and documentation into a genuine, editable 16:9 widescreen PowerPoint (.pptx) deck.
+          <p className="text-xs sm:text-sm text-slate-400 mt-1.5 max-w-3xl leading-relaxed">
+            Converts your research project papers, gap analysis, methodology, architecture, and documentation into an authentic 16:9 widescreen PowerPoint (.pptx) presentation.
           </p>
         </div>
 
         {/* Top Action Buttons */}
-        <div className="flex flex-wrap items-center gap-2 shrink-0">
+        <div className="flex flex-wrap items-center gap-2.5 shrink-0">
           <Button
             variant="outline"
             size="sm"
             onClick={() => setIsSettingsOpen(true)}
-            className="text-xs gap-1.5 h-8.5"
+            className="text-xs gap-1.5 h-9 border-cyan-500/30 text-cyan-300 hover:bg-cyan-500/10"
           >
-            <Settings2 className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+            <Settings2 className="w-3.5 h-3.5 text-cyan-400" />
             <span>Deck Settings</span>
           </Button>
 
@@ -371,43 +431,39 @@ export const PresentationPage: React.FC = () => {
               variant="outline"
               size="sm"
               onClick={() => setIsSlideshowOpen(true)}
-              className="text-xs gap-1.5 h-8.5"
+              className="text-xs gap-1.5 h-9 border-purple-500/30 text-purple-300 hover:bg-purple-500/10"
             >
-              <Play className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+              <Play className="w-3.5 h-3.5 text-purple-400" />
               <span>Preview Slideshow</span>
             </Button>
           )}
 
           {config ? (
-            <Button
-              variant="primary"
-              size="sm"
+            <button
               onClick={handleDownloadPPTX}
               disabled={isDownloading}
-              className="text-xs gap-1.5 h-8.5 shadow-sm bg-indigo-600 hover:bg-indigo-700 text-white"
+              className="inline-flex items-center gap-2 h-9 px-4 rounded-xl text-xs font-semibold text-white btn-ai-glow-cyan-magenta shadow-lg active:scale-95 transition-all disabled:opacity-50"
             >
               <Download className="w-3.5 h-3.5" />
               <span>{isDownloading ? 'Downloading .pptx...' : 'Download PPTX'}</span>
-            </Button>
+            </button>
           ) : (
-            <Button
-              variant="primary"
-              size="sm"
+            <button
               onClick={handleGenerate}
               disabled={isGenerating}
-              className="text-xs gap-1.5 h-8.5 shadow-sm bg-indigo-600 hover:bg-indigo-700 text-white"
+              className="inline-flex items-center gap-2 h-9 px-4 rounded-xl text-xs font-semibold text-white btn-ai-glow-cyan-magenta shadow-lg active:scale-95 transition-all disabled:opacity-50"
             >
               <Sparkles className="w-3.5 h-3.5" />
               <span>Generate Presentation</span>
-            </Button>
+            </button>
           )}
         </div>
       </div>
 
       {/* Upstream context notice if any */}
       {config && config.missing_upstream_context && config.missing_upstream_context.length > 0 && (
-        <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-400 text-xs flex items-start gap-2.5">
-          <Info className="w-4 h-4 shrink-0 mt-0.5" />
+        <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs flex items-start gap-2.5">
+          <Info className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
           <div>
             <span className="font-semibold">Note on Project Context: </span>
             The presentation was generated with available project data. Missing modules (
@@ -473,9 +529,10 @@ export const PresentationPage: React.FC = () => {
                   onChange={(e) => setTheme(e.target.value)}
                   className="w-full text-xs rounded-lg border border-input bg-background px-3 py-2 text-foreground focus:outline-none focus:ring-1.5 focus:ring-indigo-600 font-medium"
                 >
-                  <option value="Professional Academic">Professional Academic (Deep Oxford Navy & Crisp Slate)</option>
-                  <option value="Minimal Research">Minimal Research (Clean Editorial White & Charcoal)</option>
-                  <option value="Modern Technical">Modern Technical (Deep Violet Dark & Cyan Accents)</option>
+                  <option value="Professional Academic">Professional Academic (Deep Oxford Navy & Royal Blue)</option>
+                  <option value="Modern Technical">Modern Technical (Obsidian Cyber & Neon Cyan)</option>
+                  <option value="Prestige Crimson">Prestige Crimson (Harvard Velvet & Academic Gold)</option>
+                  <option value="Minimal Research">Minimal Research (Clean Editorial Swiss Slate)</option>
                 </select>
               </div>
 
@@ -615,8 +672,19 @@ export const PresentationPage: React.FC = () => {
               </div>
               <span className="text-border">|</span>
               <div className="flex items-center gap-1.5 text-muted-foreground">
-                <span>Theme:</span>
-                <span className="font-medium text-foreground">{config.theme}</span>
+                <Palette className="w-3.5 h-3.5 text-indigo-400" />
+                <span className="font-medium text-foreground">Theme:</span>
+                <select
+                  value={config.theme || theme}
+                  onChange={(e) => handleQuickThemeChange(e.target.value)}
+                  className="text-xs font-semibold rounded-md border border-border bg-background px-2 py-0.5 text-foreground focus:outline-none focus:ring-1 focus:ring-indigo-500 cursor-pointer"
+                  title="Switch PowerPoint Theme Palette"
+                >
+                  <option value="Professional Academic">Professional Academic (Oxford Navy)</option>
+                  <option value="Modern Technical">Modern Technical (Deep Obsidian)</option>
+                  <option value="Prestige Crimson">Prestige Crimson (Harvard Velvet)</option>
+                  <option value="Minimal Research">Minimal Research (Clean Swiss Light)</option>
+                </select>
               </div>
               <span className="text-border">|</span>
               <div className="flex items-center gap-1.5 text-muted-foreground">
@@ -659,78 +727,89 @@ export const PresentationPage: React.FC = () => {
                     setActiveSlideIndex(index);
                     setIsSlideshowOpen(true);
                   }}
-                  className="group cursor-pointer rounded-2xl border border-border bg-card hover:border-indigo-500 hover:shadow-lg transition-all duration-200 overflow-hidden flex flex-col relative"
+                  className="group cursor-pointer rounded-2xl neon-card-project hover:border-cyan-400 hover:shadow-[0_0_30px_rgba(6,182,212,0.35)] transition-all duration-300 overflow-hidden flex flex-col relative"
                 >
                   {/* 16:9 Aspect Ratio PPT Slide Canvas */}
-                  <div className={`aspect-[16/9] w-full p-5 flex flex-col justify-between relative select-none ${
-                    config.theme === 'Minimal Research'
-                      ? 'bg-slate-50 text-slate-900 border-b border-slate-200 dark:bg-slate-900 dark:text-slate-100'
-                      : config.theme === 'Modern Technical'
-                      ? 'bg-[#0b0f19] text-slate-100 border-b border-slate-800'
-                      : 'bg-[#0f172a] text-slate-100 border-b border-slate-800'
-                  }`}>
+                  <div className="aspect-[16/9] w-full p-5 flex flex-col justify-between relative select-none bg-gradient-to-br from-[#06091a] via-[#0a0f28] to-[#0e1438] border-b border-[#1b2245] text-slate-100">
+                    {/* High-tech tech grid pattern overlay */}
+                    <div className="absolute inset-0 bg-tech-grid opacity-25 pointer-events-none" />
+
                     {/* Slide Top Bar */}
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between relative z-10">
                       <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-mono font-bold tracking-wider uppercase px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-400/30">
+                        <span className="text-[10px] font-mono font-bold tracking-wider uppercase px-2 py-0.5 rounded-lg bg-cyan-500/20 text-cyan-300 border border-cyan-400/40 shadow-[0_0_10px_rgba(6,182,212,0.3)]">
                           Slide {slideNum}
                         </span>
                         {slide.badge && (
-                          <span className="text-[9px] font-semibold tracking-wider uppercase px-1.5 py-0.5 rounded bg-slate-700/50 text-slate-300">
+                          <span className="text-[9px] font-semibold tracking-wider uppercase px-1.5 py-0.5 rounded bg-fuchsia-500/20 text-fuchsia-300 border border-fuchsia-400/30">
                             {slide.badge}
                           </span>
                         )}
                       </div>
                       {(slide.keyMetric || slide.key_metric) && (
-                        <span className="text-[9px] font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
+                        <span className="text-[9px] font-mono px-2 py-0.5 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-400/40">
                           {(slide.keyMetric || slide.key_metric)?.label}: {(slide.keyMetric || slide.key_metric)?.value}
                         </span>
                       )}
                     </div>
 
                     {/* Slide Main Content */}
-                    <div className="space-y-1.5 my-auto">
-                      <h3 className="text-xs sm:text-sm font-bold group-hover:text-indigo-400 transition-colors line-clamp-2 leading-snug">
+                    <div className="space-y-1.5 my-auto relative z-10">
+                      <h3 className="text-xs sm:text-sm font-bold group-hover:text-cyan-300 transition-colors line-clamp-2 leading-snug">
                         {slide.title}
                       </h3>
                       {(slide.mainMessage || slide.main_message) && (
-                        <p className="text-[10px] text-indigo-300 dark:text-indigo-400 font-medium line-clamp-1">
+                        <p className="text-[10px] text-cyan-300 font-medium line-clamp-1">
                           ✦ {slide.mainMessage || slide.main_message}
                         </p>
                       )}
                       <ul className="space-y-1 pt-1 text-[10px] opacity-85">
                         {bullets.slice(0, 3).map((bp, bIdx) => (
                           <li key={bIdx} className="line-clamp-1 flex items-start gap-1.5">
-                            <span className="text-indigo-400 shrink-0">•</span>
-                            <span>{bp}</span>
+                            <span className="text-cyan-400 shrink-0 font-bold">•</span>
+                            <span className="text-slate-300">{bp}</span>
                           </li>
                         ))}
                       </ul>
                     </div>
 
                     {/* Slide Bottom Bar */}
-                    <div className="flex items-center justify-between text-[9px] opacity-60 border-t border-slate-700/50 pt-1">
-                      <span className="truncate max-w-[140px]">{config.title || 'AI Research Scientist'}</span>
-                      <span className="font-mono">{slideNum} / {config.slides.length}</span>
+                    <div className="flex items-center justify-between text-[9px] text-slate-400 border-t border-[#1b2245] pt-1 relative z-10 font-mono">
+                      <span className="truncate max-w-[140px] text-cyan-400/80">{config.title || 'AI Research Scientist'}</span>
+                      <span className="text-cyan-300 font-bold">{slideNum} / {config.slides.length}</span>
                     </div>
 
                     {/* Overlay spinner when regenerating */}
                     {isRegeneratingThis && (
-                      <div className="absolute inset-0 bg-black/70 backdrop-blur-xs flex items-center justify-center text-white">
+                      <div className="absolute inset-0 bg-black/80 backdrop-blur-xs flex items-center justify-center text-white z-20">
                         <div className="flex flex-col items-center gap-1.5 text-xs font-medium">
-                          <RotateCw className="w-5 h-5 animate-spin text-indigo-400" />
-                          <span>Synthesizing...</span>
+                          <RotateCw className="w-5 h-5 animate-spin text-cyan-400" />
+                          <span className="font-mono text-cyan-200">Synthesizing...</span>
                         </div>
                       </div>
                     )}
                   </div>
 
                   {/* Card Meta & Action Footer */}
-                  <div className="p-3 bg-card border-t border-border flex items-center justify-between text-xs gap-2">
-                    <span className="font-semibold text-foreground truncate">
+                  <div className="p-3 bg-[#0a0d26]/80 border-t border-[#1b2245] flex items-center justify-between text-xs gap-2">
+                    <span className="font-semibold text-slate-200 truncate">
                       {slide.title}
                     </span>
                     <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+                      {slide.notes && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleSpeakSlide(slide.notes);
+                          }}
+                          className="h-7 w-7 p-0 text-muted-foreground hover:text-indigo-600 dark:hover:text-indigo-400"
+                          title="Listen to Slide Voiceover Script"
+                        >
+                          <Volume2 className="w-3.5 h-3.5 text-indigo-500" />
+                        </Button>
+                      )}
                       <Button
                         variant="ghost"
                         size="sm"
@@ -963,9 +1042,10 @@ export const PresentationPage: React.FC = () => {
                   onChange={(e) => setTheme(e.target.value)}
                   className="w-full text-xs rounded-lg border border-input bg-background px-3 py-1.5 text-foreground focus:outline-none focus:ring-1.5 focus:ring-indigo-600 font-medium"
                 >
-                  <option value="Professional Academic">Professional Academic</option>
-                  <option value="Minimal Research">Minimal Research</option>
-                  <option value="Modern Technical">Modern Technical</option>
+                  <option value="Professional Academic">Professional Academic (Oxford Navy & Blue)</option>
+                  <option value="Modern Technical">Modern Technical (Obsidian & Cyan)</option>
+                  <option value="Prestige Crimson">Prestige Crimson (Harvard Velvet & Gold)</option>
+                  <option value="Minimal Research">Minimal Research (Clean Swiss Light)</option>
                 </select>
               </div>
             </div>
@@ -1159,12 +1239,32 @@ export const PresentationPage: React.FC = () => {
 
               {/* Speaker Notes Bar */}
               {config.slides[activeSlideIndex].notes && (
-                <div className="p-3 rounded-xl bg-slate-800/60 border border-slate-700/60 text-xs text-slate-300 flex items-start gap-2.5">
-                  <Volume2 className="w-4 h-4 text-indigo-400 shrink-0 mt-0.5" />
-                  <div>
-                    <strong className="text-indigo-300">Oral Speaker Notes: </strong>
-                    <span>{config.slides[activeSlideIndex].notes}</span>
+                <div className="p-3 rounded-xl bg-slate-800/60 border border-slate-700/60 text-xs text-slate-300 flex items-start justify-between gap-3">
+                  <div className="flex items-start gap-2.5">
+                    <Volume2 className="w-4 h-4 text-indigo-400 shrink-0 mt-0.5" />
+                    <div>
+                      <strong className="text-indigo-300">Oral Speaker Notes: </strong>
+                      <span>{config.slides[activeSlideIndex].notes}</span>
+                    </div>
                   </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleSpeakSlide(config.slides[activeSlideIndex].notes)}
+                    className="h-7 text-[11px] gap-1.5 shrink-0 bg-slate-700/60 border-slate-600 text-slate-200 hover:text-white hover:bg-indigo-600 hover:border-indigo-500 transition-all"
+                  >
+                    {isSpeakingSlide ? (
+                      <>
+                        <Square className="w-3 h-3 text-rose-400 fill-rose-400" />
+                        <span>Stop Voice</span>
+                      </>
+                    ) : (
+                      <>
+                        <Volume2 className="w-3 h-3 text-indigo-400" />
+                        <span>Narrate Slide</span>
+                      </>
+                    )}
+                  </Button>
                 </div>
               )}
 

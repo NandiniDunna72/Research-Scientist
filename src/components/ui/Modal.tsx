@@ -48,34 +48,37 @@ export const Modal: React.FC<ModalProps> = ({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-background/80 backdrop-blur-sm transition-all"
+            className="fixed inset-0 bg-background/70 backdrop-blur-md transition-all duration-300"
           />
 
           {/* Modal Card */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 10 }}
+            initial={{ opacity: 0, scale: 0.96, y: 12 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 10 }}
-            transition={{ duration: 0.2 }}
+            exit={{ opacity: 0, scale: 0.96, y: 12 }}
+            transition={{ type: "spring", damping: 25, stiffness: 350 }}
             className={cn(
-              "relative z-50 w-full rounded-2xl border border-border bg-card p-6 shadow-2xl overflow-hidden",
+              "relative z-50 w-full rounded-2xl border border-border/80 bg-card/95 backdrop-blur-xl p-6 shadow-2xl overflow-hidden ring-1 ring-border/20",
               maxWClasses[maxWidth]
             )}
           >
-            <div className="flex items-start justify-between pb-3">
+            {/* Top iridescent highlight line */}
+            <div className="absolute top-0 inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-indigo-500/60 to-transparent pointer-events-none" />
+
+            <div className="flex items-start justify-between pb-3 border-b border-border/50">
               <div>
-                {title && <h2 className="text-lg font-semibold text-foreground tracking-tight">{title}</h2>}
-                {description && <p className="text-xs text-muted-foreground mt-1">{description}</p>}
+                {title && <h2 className="text-lg font-bold font-heading text-foreground tracking-tight">{title}</h2>}
+                {description && <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{description}</p>}
               </div>
               <button
                 onClick={onClose}
-                className="rounded-lg p-1 text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+                className="rounded-xl p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground transition-all cursor-pointer"
                 aria-label="Close modal"
               >
-                <X className="h-5 w-5" />
+                <X className="h-4 w-4" />
               </button>
             </div>
-            <div className="mt-2">{children}</div>
+            <div className="mt-4">{children}</div>
           </motion.div>
         </div>
       )}

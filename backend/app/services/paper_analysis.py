@@ -2,11 +2,14 @@ import io
 import re
 import json
 import logging
+from datetime import datetime, timezone
 from typing import Dict, Any, Tuple, Optional, List
 import httpx
 import pypdf
+from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.models.paper import ResearchPaper
+from app.models.analysis import PaperAnalysis
 
 logger = logging.getLogger("paper_analysis")
 logger.setLevel(logging.INFO)
@@ -432,6 +435,14 @@ Please extract the structured academic analysis and return ONLY a valid JSON obj
         # 7. Algorithms and Models (Accurate Architecture Detection)
         # ----------------------------------------------------
         candidate_algos = [
+            ("Large Language Model (LLM / ChatGPT)", [r"\bLLM\b", r"\bLarge Language Model", r"\bChatGPT\b", r"\bGPT-[34]\b", r"\bLLaMA\b"]),
+            ("Transformer (BERT / RoBERTa / T5)", [r"\btransformer\b", r"\bBERT\b", r"\bRoBERTa\b", r"\bDeBERTa\b", r"\bT5\b", r"\bSpam[-\s]?T5\b"]),
+            ("Zero-Shot & Few-Shot In-Context Learning", [r"\bzero[-\s]shot\b", r"\bfew[-\s]shot\b", r"\bin[-\s]context learning\b", r"\bprompting\b"]),
+            ("Hierarchical Attention Network (HAN / Self-Attention)", [r"\bhierarchical attention\b", r"\battention mechanism\b", r"\bself[-\s]attention\b", r"\bmulti[-\s]head attention\b"]),
+            ("Extreme Gradient Boosting (XGBoost)", [r"\bXGBoost\b", r"\bextreme gradient boosting\b", r"\bgradient boost\b", r"\bLightGBM\b", r"\bCatBoost\b"]),
+            ("Capsule Network (CapsNet)", [r"\bcapsule network\b", r"\bCapsNet\b", r"\bcapsule\b"]),
+            ("Recurrent Neural Network (LSTM / BiLSTM / GRU)", [r"\bBiLSTM\b", r"\bLSTM\b", r"\bGRU\b", r"\brecurrent neural\b"]),
+            ("Graph Neural Network (GNN / GCN / ST-GNN)", [r"\bGNN\b", r"\bGCN\b", r"\bGAT\b", r"\bgraph neural\b"]),
             ("Physics-Informed Neural Network (PINN)", [r"\bphysics[-\s]informed\b"]),
             ("Generative Adversarial Network (GAN)", [r"\bGAN\b", r"\bgenerative adversarial\b"]),
             ("Deep Convolutional GAN (DCGAN)", [r"\bDCGAN\b"]),
@@ -445,8 +456,9 @@ Please extract the structured academic analysis and return ONLY a valid JSON obj
             ("Deep Neural Network", [r"\bdeep learning\b", r"\bneural network\b"]),
         ]
         detected_algos = []
+        searchable_text = f"{title} {content}"
         for algo_name, patterns in candidate_algos:
-            if any(re.search(pat, content, re.I) for pat in patterns):
+            if any(re.search(pat, searchable_text, re.I) for pat in patterns):
                 detected_algos.append(algo_name)
 
         if not detected_algos:
@@ -611,3 +623,58 @@ Please extract the structured academic analysis and return ONLY a valid JSON obj
             "source_type": source_type,
             "overview": overview,
         }
+
+    @classmethod
+    async def ensure_paper_analysis(cls, paper: ResearchPaper, user_id: int, db: Session) -> PaperAnalysis:
+        """
+        Ensures a structured PaperAnalysis record exists in PostgreSQL for the given paper and user.
+        If already present, returns the existing analysis.
+        If missing, extracts content, performs deterministic academic analysis, and persists it.
+        """
+        existing = (
+            db.query(PaperAnalysis)
+            .filter(PaperAnalysis.paper_id == paper.id, PaperAnalysis.user_id == user_id)
+            .order_by(PaperAnalysis.updated_at.desc())
+            .first()
+        )
+        if existing:
+            return existing
+
+        try:
+            content, source_type = await cls.extract_paper_content(paper)
+        except Exception:
+            content = (paper.abstract or paper.title or "Academic Research Paper").strip()
+            source_type = "abstract" if paper.abstract else "metadata"
+
+        try:
+            analysis_data = await cls.analyze_paper_content(paper, content, source_type)
+        except Exception as e:
+            logger.warning(f"Analysis extraction fallback for paper {paper.id}: {e}")
+            analysis_data = cls._academic_rule_analyzer(paper, content, source_type)
+
+        analysis_record = PaperAnalysis(
+            paper_id=paper.id,
+            user_id=user_id,
+            research_problem=analysis_data.get("research_problem"),
+            research_objective=analysis_data.get("research_objective"),
+            research_questions=analysis_data.get("research_questions"),
+            approach=analysis_data.get("approach"),
+            methodology=analysis_data.get("methodology"),
+            dataset=analysis_data.get("dataset"),
+            algorithms_and_models=analysis_data.get("algorithms_and_models"),
+            experimental_setup=analysis_data.get("experimental_setup"),
+            key_results=analysis_data.get("key_results"),
+            key_findings=analysis_data.get("key_findings"),
+            contributions=analysis_data.get("contributions"),
+            limitations=analysis_data.get("limitations"),
+            future_work=analysis_data.get("future_work"),
+            keywords=analysis_data.get("keywords"),
+            source_type=source_type,
+            overview=analysis_data.get("overview"),
+            updated_at=datetime.now(timezone.utc),
+        )
+        db.add(analysis_record)
+        db.commit()
+        db.refresh(analysis_record)
+        return analysis_record
+

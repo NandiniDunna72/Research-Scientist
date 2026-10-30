@@ -84,9 +84,9 @@ export const ComparisonPage: React.FC = () => {
 
           if (eligibleRes) {
             setEligibleData(eligibleRes);
-            // Default select all eligible papers if none selected yet, up to 5
+            // Default select all eligible papers
             if (eligibleRes.eligible_papers && eligibleRes.eligible_papers.length > 0) {
-              const defaultIds = eligibleRes.eligible_papers.slice(0, 5).map((p) => p.id);
+              const defaultIds = eligibleRes.eligible_papers.map((p) => p.id);
               setSelectedPaperIds(defaultIds);
             }
           }
@@ -122,14 +122,6 @@ export const ComparisonPage: React.FC = () => {
       if (prev.includes(paperId)) {
         return prev.filter((id) => id !== paperId);
       } else {
-        if (prev.length >= 10) {
-          addToast({
-            type: 'warning',
-            title: 'Selection Limit Reached',
-            message: 'Comparison supports a maximum of 10 papers at a time.',
-          });
-          return prev;
-        }
         return [...prev, paperId];
       }
     });
@@ -139,7 +131,7 @@ export const ComparisonPage: React.FC = () => {
   const handleSelectAll = (select: boolean) => {
     if (!eligibleData) return;
     if (select) {
-      const allIds = eligibleData.eligible_papers.slice(0, 10).map((p) => p.id);
+      const allIds = eligibleData.eligible_papers.map((p) => p.id);
       setSelectedPaperIds(allIds);
     } else {
       setSelectedPaperIds([]);
@@ -273,36 +265,39 @@ export const ComparisonPage: React.FC = () => {
   return (
     <div className="space-y-8 animate-fade-in pb-16">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-border/80">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-[#1b2245]">
         <div>
-          <div className="flex items-center gap-2.5">
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
-              Research Paper Comparison
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-[#0a0d26] border border-cyan-400/50 flex items-center justify-center text-cyan-300 shadow-[0_0_18px_rgba(6,182,212,0.4)]">
+              <GitCompare className="w-5 h-5 animate-neon-pulse" />
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight font-heading gradient-heading">
+              Comparison
             </h1>
-            <Badge variant="indigo" size="md">
-              Module 7
+            <Badge variant="indigo" size="md" className="border-cyan-400/40 text-cyan-300 font-mono">
+              Module 8
             </Badge>
             {comparison && (
-              <Badge variant="secondary" size="md" className="font-mono">
+              <Badge variant="secondary" size="md" className="font-mono text-fuchsia-300 border-fuchsia-500/30">
                 {comparison.papers_compared} Papers
               </Badge>
             )}
           </div>
-          <p className="text-xs sm:text-sm text-muted-foreground mt-1 max-w-3xl leading-relaxed">
+          <p className="text-xs sm:text-sm text-slate-400 mt-1.5 max-w-3xl leading-relaxed">
             Multi-dimensional comparative matrix benchmarking problems, methodologies, datasets, algorithms, and evaluation metrics across surveyed literature.
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5 shrink-0">
+        <div className="flex items-center gap-2.5 shrink-0 flex-wrap">
           {comparison && (
             <>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handleExportCSV}
-                className="text-xs gap-1.5"
+                className="text-xs gap-1.5 border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/10"
               >
-                <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-400" />
                 <span>Export CSV</span>
               </Button>
 
@@ -311,9 +306,9 @@ export const ComparisonPage: React.FC = () => {
                 size="sm"
                 onClick={handleRegenerate}
                 disabled={isRegenerating || selectedPaperIds.length < 2}
-                className="text-xs gap-1.5"
+                className="text-xs gap-1.5 border-cyan-500/30 text-cyan-300 hover:bg-cyan-500/10"
               >
-                <RefreshCw className={`w-3.5 h-3.5 ${isRegenerating ? 'animate-spin text-indigo-500' : ''}`} />
+                <RefreshCw className={`w-3.5 h-3.5 ${isRegenerating ? 'animate-spin text-cyan-400' : ''}`} />
                 <span>{isRegenerating ? 'Regenerating...' : 'Regenerate'}</span>
               </Button>
             </>
@@ -323,11 +318,11 @@ export const ComparisonPage: React.FC = () => {
             variant={isSelectionPanelOpen ? 'secondary' : 'outline'}
             size="sm"
             onClick={() => setIsSelectionPanelOpen(!isSelectionPanelOpen)}
-            className="text-xs gap-1.5"
+            className="text-xs gap-1.5 border-purple-500/30 text-purple-300 hover:bg-purple-500/10"
           >
-            <Filter className="w-3.5 h-3.5" />
+            <Filter className="w-3.5 h-3.5 text-purple-400" />
             <span>{isSelectionPanelOpen ? 'Hide Selection' : 'Select Papers'}</span>
-            <Badge variant="indigo" size="sm" className="ml-1">
+            <Badge variant="indigo" size="sm" className="ml-1 bg-purple-500/20 text-purple-300 border-purple-400/30 font-mono">
               {selectedPaperIds.length}
             </Badge>
           </Button>
@@ -356,7 +351,7 @@ export const ComparisonPage: React.FC = () => {
                   Select Analyzed Papers for Comparison
                 </CardTitle>
                 <CardDescription className="text-xs mt-0.5">
-                  Choose 2 to 10 analyzed papers from your active project workspace.
+                  Compare all analyzed papers from your active project workspace side-by-side.
                 </CardDescription>
               </div>
 

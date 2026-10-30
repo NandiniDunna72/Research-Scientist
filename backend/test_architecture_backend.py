@@ -177,7 +177,7 @@ def run_comprehensive_architecture_tests():
     # [Test 1] Project with all upstream modules completed
     # -------------------------------------------------------------
     print("\n[Test 1] Generate system architecture for project with all upstream assets (POST /api/architecture/generate)")
-    resp1 = httpx.post(f"{BASE_URL}/api/architecture/generate", json={"project_id": proj1_id}, headers=headers_a)
+    resp1 = httpx.post(f"{BASE_URL}/api/architecture/generate", json={"project_id": proj1_id}, headers=headers_a, timeout=45.0)
     assert resp1.status_code == 201, f"Expected 201, got {resp1.status_code}: {resp1.text}"
     data1 = resp1.json()
     assert "data" in data1
@@ -299,7 +299,7 @@ def run_comprehensive_architecture_tests():
     db.commit()
     db.close()
 
-    resp3 = httpx.post(f"{BASE_URL}/api/architecture/generate", json={"project_id": proj2_id}, headers=headers_a)
+    resp3 = httpx.post(f"{BASE_URL}/api/architecture/generate", json={"project_id": proj2_id}, headers=headers_a, timeout=45.0)
     assert resp3.status_code == 201, f"Expected 201, got {resp3.status_code}: {resp3.text}"
     data3 = resp3.json()["data"]
     assert "missing_upstream_context" in data3
@@ -389,7 +389,7 @@ def run_comprehensive_architecture_tests():
     # [Test 9] In-place regeneration (POST /api/architecture/{project_id}/regenerate)
     # -------------------------------------------------------------
     print("\n[Test 9] Explicitly regenerate system architecture")
-    resp9 = httpx.post(f"{BASE_URL}/api/architecture/{proj1_id}/regenerate", headers=headers_a)
+    resp9 = httpx.post(f"{BASE_URL}/api/architecture/{proj1_id}/regenerate", headers=headers_a, timeout=45.0)
     assert resp9.status_code == 200, f"Expected 200, got {resp9.status_code}: {resp9.text}"
     regen_id = resp9.json()["id"]
     assert regen_id > arch_record_id

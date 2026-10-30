@@ -14,14 +14,14 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
         <select
           ref={ref}
           className={cn(
-            "flex h-9.5 w-full appearance-none rounded-lg border border-input bg-background px-3 py-1.5 pr-8 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1.5 focus-visible:ring-primary focus-visible:border-primary disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer",
+            "flex h-9.5 w-full appearance-none rounded-xl border border-[#1e2548] bg-[#07091a]/95 px-3 py-1.5 pr-8 text-sm text-slate-200 shadow-sm transition-all focus-visible:outline-none focus-visible:ring-1.5 focus-visible:ring-cyan-400 focus-visible:border-cyan-400 focus-visible:shadow-[0_0_12px_rgba(6,182,212,0.2)] disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer",
             className
           )}
           {...props}
         >
           {children}
         </select>
-        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
       </div>
     );
   }

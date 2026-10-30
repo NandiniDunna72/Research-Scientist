@@ -27,6 +27,7 @@ from app.schemas.literature_review import (
     LiteratureReviewGenerationResponse,
 )
 from app.services.literature_review_service import LiteratureReviewService
+from app.services.paper_analysis import PaperAnalysisService
 
 logger = logging.getLogger("literature_review_router")
 logger.setLevel(logging.INFO)
@@ -296,17 +297,14 @@ async def _execute_literature_review_generation(
                 .first()
             )
             if not analysis:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"Paper '{paper.title}' has no analysis available. Please analyze it before generating a literature review.",
-                )
+                analysis = await PaperAnalysisService.ensure_paper_analysis(paper, current_user.id, db)
             analyzed_rows.append((paper, analysis))
         
         total_discovered = len(project_papers)
         total_considered = len(user_matched)
 
     else:
-        # Default: consider all papers for project
+        # Default: synthesize across ALL papers for project
         for paper in project_papers:
             analysis = (
                 db.query(PaperAnalysis)
@@ -316,10 +314,9 @@ async def _execute_literature_review_generation(
                 )
                 .first()
             )
-            if analysis:
-                analyzed_rows.append((paper, analysis))
-            else:
-                papers_without_analysis.append(paper.title)
+            if not analysis:
+                analysis = await PaperAnalysisService.ensure_paper_analysis(paper, current_user.id, db)
+            analyzed_rows.append((paper, analysis))
 
         if not analyzed_rows:
             # Check papers associated with project gap analysis
@@ -558,15 +555,14 @@ async def generate_literature_review(
     summary="Get Analyzed Papers for Literature Review",
     description="Returns all papers with existing analyses for the given project with ownership verification.",
 )
-def get_analyzed_papers_for_lit_review(
+async def get_analyzed_papers_for_lit_review(
     project_id: Union[int, str],
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     project = _resolve_project_with_ownership(project_id, current_user.id, db)
-    analyzed_papers = (
+    project_papers = (
         db.query(ResearchPaper)
-        .join(PaperAnalysis, PaperAnalysis.paper_id == ResearchPaper.id)
         .filter(
             ResearchPaper.user_id == current_user.id,
             (ResearchPaper.project_id == project.id) | (ResearchPaper.project_id.is_(None)),
@@ -575,8 +571,10 @@ def get_analyzed_papers_for_lit_review(
         .all()
     )
 
-    return [
-        {
+    result = []
+    for p in project_papers:
+        await PaperAnalysisService.ensure_paper_analysis(p, current_user.id, db)
+        result.append({
             "id": p.id,
             "title": p.title,
             "authors": p.authors,
@@ -585,9 +583,9 @@ def get_analyzed_papers_for_lit_review(
             "source": p.source,
             "abstract": p.abstract,
             "has_analysis": True,
-        }
-        for p in analyzed_papers
-    ]
+        })
+
+    return result
 
 
 @router.get(

@@ -2,14 +2,14 @@ import { UserSettings } from '../types';
 
 export const defaultSettings: UserSettings = {
   profile: {
-    name: 'D. Bhavani',
-    email: 'bhavani.researcher@academic.org',
-    institution: 'Department of Computer Science & Biomedical Engineering',
+    name: 'Dr. Alex Vance',
+    email: 'alex.vance@stanford.edu',
+    institution: 'Department of Computer Science & Autonomous AI Lab',
     avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
     role: 'Principal AI Research Scientist',
   },
   appearance: {
-    theme: 'light',
+    theme: 'dark',
     compactMode: false,
     highContrast: false,
   },
@@ -18,6 +18,14 @@ export const defaultSettings: UserSettings = {
     temperature: 0.2,
     summaryLength: 'comprehensive',
     autoCite: true,
+  },
+  voice: {
+    enabled: true,
+    engine: 'gemini-live-audio',
+    voiceId: 'aoede',
+    speechRate: 1.0,
+    pitch: 1.0,
+    autoReadResponses: false,
   },
   research: {
     defaultPaperCount: 20,

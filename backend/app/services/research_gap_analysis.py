@@ -221,171 +221,288 @@ Please perform cross-paper synthesis and return ONLY a valid JSON object matchin
 
         gaps: List[Dict[str, Any]] = []
 
+        # Detect Domain for strictly grounded domain synthesis
+        topic_lower = topic.lower()
+        is_mobility = any(w in topic_lower for w in ["ambulance", "route", "routing", "traffic", "vehicle", "fleet", "dispatch", "transit", "navigation", "congestion"])
+        is_agri = any(w in topic_lower for w in ["plant", "crop", "leaf", "disease", "agriculture", "botan", "farming", "foliar", "soil", "pest", "apple"])
+        is_clinical = any(w in topic_lower for w in ["cancer", "oncology", "clinical", "pathology", "patient", "biomedical", "radiology", "tumor", "biopsy", "histopatholog", "mri", "ehr", "medical"])
+        is_nlp = any(w in topic_lower for w in ["email", "spam", "nlp", "language", "llm", "text", "translation", "sentiment", "transformer", "bert", "t5", "chatgpt"])
+
         # =========================================================================
-        # GAP 1: Methodological Gap — Dynamic Adaptation Under Volatile Operational Conditions
+        # GAP 1: Methodological Gap — Dynamic Adaptation & Distribution Shift
         # =========================================================================
         drift_affected = [
             t for l, t in all_limitations
-            if re.search(r"\b(drift|shift|domain|noise|unseen|generaliz|volatile|traffic|dynamic|latency|delay|real-time)\b", l, re.I)
+            if re.search(r"\b(drift|shift|domain|noise|unseen|generaliz|volatile|adversarial|dynamic|latency|delay|real-time)\b", l, re.I)
         ]
         if not drift_affected:
             drift_affected = paper_titles[:min(3, num_papers)]
         else:
             drift_affected = list(dict.fromkeys(drift_affected))
 
+        if is_nlp:
+            gap1_title = f"Vulnerability to Evolving Adversarial Drift and Zero-Shot Semantic Shifts in {topic}"
+            gap1_desc = (
+                f"While reviewed studies in {topic} demonstrate high empirical discrimination on retrospective benchmarks, "
+                f"existing models rely on static pre-trained parameter weights or fixed decision boundaries. When exposed to "
+                f"adversarial obfuscation, zero-shot lexical mutations, homoglyphs, or non-stationary semantic drift, "
+                f"classification confidence decays rapidly. None of the reviewed systems incorporate continuous, low-latency "
+                f"epistemic adaptation mechanisms to maintain robust detection across novel evasion patterns."
+            )
+            gap1_dir = (
+                "Develop lightweight, test-time adaptive representation updating or contrastive embedding calibration "
+                "that dynamically detects and neutralizes adversarial semantic drift without requiring full parameter retraining."
+            )
+        elif is_mobility:
+            gap1_title = f"Lack of Real-Time Dynamic Adaptation Under Volatile Operational Environments in {topic}"
+            gap1_desc = (
+                f"While existing route optimization algorithms demonstrate strong theoretical performance, they predominantly rely on "
+                f"static graph representations. In live urban operations, sudden traffic congestion, signal delays, and incident surges "
+                f"severely degrade travel time predictability. Existing frameworks lack real-time closed-loop edge adaptation."
+            )
+            gap1_dir = "Incorporate dynamic spatio-temporal graph neural networks and online adaptive path recalculation mechanisms."
+        elif is_agri:
+            gap1_title = f"Model Performance Degradation Under Uncontrolled Field Environmental Variations in {topic}"
+            gap1_desc = (
+                f"Existing diagnostic algorithms in {topic} are primarily evaluated on controlled laboratory imagery. "
+                f"When deployed under complex natural lighting, dynamic shadows, multiple co-occurring foliar lesions, and variable canopy "
+                f"geometry, predictive accuracy drops significantly due to uncontrolled optical confounding."
+            )
+            gap1_dir = "Investigate physics-informed domain generalization, multispectral normalization, and canopy-aware attention modeling."
+        elif is_clinical:
+            gap1_title = f"Sensitivity to Multi-Center Acquisition Scanners and Staining Protocol Variations in {topic}"
+            gap1_desc = (
+                f"Diagnostic AI models in {topic} exhibit severe performance drops when evaluated across external clinical sites, "
+                f"attributable to scanner variations, tissue preparation discrepancies, and demographic cohort shifts."
+            )
+            gap1_dir = "Develop self-supervised contrastive domain alignment and invariant feature extraction across disparate clinical centers."
+        else:
+            gap1_title = f"Sensitivity to Out-of-Distribution Data Variance and Operational Drift in {topic}"
+            gap1_desc = (
+                f"Surveyed models in {topic} perform well on standardized in-distribution splits, but suffer pronounced performance "
+                f"degradation when exposed to operational variance and out-of-distribution test samples."
+            )
+            gap1_dir = "Design robust representation architectures with epistemic uncertainty estimation and domain-invariant optimization."
+
         gaps.append({
-            "gap_title": f"Lack of Real-Time Dynamic Adaptation Under Volatile Operational Environments in {topic}",
+            "gap_title": gap1_title,
             "category": "Methodological Gap",
-            "description": (
-                f"While the analyzed studies in {topic} demonstrate competitive theoretical benchmark performance, existing algorithms rely on static "
-                f"or pre-compiled representation models. When exposed to real-world operational volatility (such as sudden traffic congestion, unexpected network latency, "
-                f"sensor degradation, or shifting environmental dynamics), these systems suffer severe performance degradation. "
-                f"None of the reviewed architectures incorporate closed-loop test-time self-adaptive recalibration mechanisms."
-            ),
+            "description": gap1_desc,
             "evidence": [
-                f"{t} documents vulnerability to real-world operational variance and dynamic environmental shifts in reported limitations."
+                f"{t} documents vulnerability to distributional shifts and real-world variance in reported limitation disclosures."
                 for t in drift_affected[:3]
             ],
             "affected_papers": drift_affected,
             "why_it_matters": (
-                f"In mission-critical applications like {topic}, real-world systems must maintain high responsiveness and decision reliability across "
-                f"unforeseen operational shifts without requiring complete offline retraining or manual system resets."
+                f"In mission-critical {topic} deployments, failure to adapt against non-stationary distributions results in "
+                f"severe false positives or missed detections, compromising operational trustworthiness."
             ),
-            "potential_direction": (
-                "Develop lightweight, test-time online reinforcement learning or adaptive state-space representations that dynamically "
-                "recalculate optimal pathways and policy weights under sub-second latency constraints."
-            ),
+            "potential_direction": gap1_dir,
             "confidence": "High" if len(drift_affected) >= 2 else "Medium",
             "confidence_rationale": f"Explicitly corroborated by limitation disclosures across {len(drift_affected)} analyzed papers.",
             "priority": 1,
         })
 
         # =========================================================================
-        # GAP 2: Dataset & Operational Gap — Geographic and Environmental Diversity
+        # GAP 2: Dataset & Operational Gap — Benchmark Diversity & Representation
         # =========================================================================
         dataset_affected = [t for _, t in all_datasets] if all_datasets else paper_titles
         dataset_affected = list(dict.fromkeys(dataset_affected))
 
+        if is_nlp:
+            gap2_title = f"Restricted Diversity and Temporal Stationarity Across {topic} Benchmarks"
+            gap2_desc = (
+                f"Evaluations across the reviewed {topic} literature remain heavily concentrated on legacy public archives "
+                f"(e.g., static curated email corpora) that lack contemporary adversarial vectors, multi-lingual messages, and rich "
+                f"multimodal payload structures (HTML formatting, attachments, inline tracking). This limits ecological validity."
+            )
+            gap2_dir = (
+                "Construct standardized, temporally partitioned open-source benchmark suites incorporating modern multimodal payloads, "
+                "adversarial long-tail evasion instances, and longitudinal drift tracking."
+            )
+        elif is_mobility:
+            gap2_title = f"Restricted Topological and Environmental Diversity Across {topic} Benchmarks"
+            gap2_desc = (
+                f"Analyzed routing studies concentrate on narrow regional road partitions or synthetic grids, while dense urban canyons, "
+                f"rural transit corridors, and multi-jurisdictional boundary zones remain under-represented."
+            )
+            gap2_dir = "Assemble multi-city, heterogeneous topological road network benchmarks with stochastic emergency demand models."
+        else:
+            gap2_title = f"Restricted Diversity and Benchmark Scope Across {topic} Datasets"
+            gap2_desc = (
+                f"Current studies evaluate frameworks on narrow benchmark cohorts with homogeneous collection conditions, "
+                f"leaving edge cases, long-tail distributions, and diverse operational environments under-sampled."
+            )
+            gap2_dir = "Curate standardized, multi-source open-access benchmark suites representing diverse operational distributions."
+
         gaps.append({
-            "gap_title": f"Restricted Topological and Environmental Diversity Across {topic} Benchmarks",
+            "gap_title": gap2_title,
             "category": "Dataset Gap",
-            "description": (
-                f"Across the analyzed papers on {topic}, experimental validation remains heavily concentrated on standardized, "
-                f"centralized repositories or narrow regional partitions (e.g., specific urban grids or isolated benchmark instances), while heterogeneous topologies, "
-                f"dense urban canyons, and multi-jurisdictional boundary zones remain critically under-sampled. "
-                f"The literature lacks cross-regional validation protocols reflecting diverse real-world operational distributions."
-            ),
+            "description": gap2_desc,
             "evidence": [
-                f"{t} evaluates frameworks on restricted regional test partitions without cross-domain multi-topology validation."
+                f"{t} evaluates frameworks on restricted training/evaluation partitions without longitudinal cross-domain validation."
                 for t in dataset_affected[:3]
             ],
             "affected_papers": dataset_affected[:min(4, num_papers)],
             "why_it_matters": (
-                f"Algorithms validated solely on homogeneous operational instances introduce systemic bias and risk severe operational failure "
-                f"when transferred to disparate topological or infrastructural environments."
+                f"Algorithms trained and validated solely on homogeneous datasets introduce systemic bias and fail to generalize "
+                f"when deployed across heterogeneous real-world conditions."
             ),
-            "potential_direction": (
-                "Construct standardized multi-region open-source benchmark suites incorporating heterogeneous topologies, variable road networks, "
-                "and probabilistic emergency demand distributions."
-            ),
+            "potential_direction": gap2_dir,
             "confidence": "High",
             "confidence_rationale": "Corroborated by dataset cohort parameters across all reviewed studies.",
             "priority": 2,
         })
 
         # =========================================================================
-        # GAP 3: Evaluation Gap — Offline Surrogate Metrics vs. Live Closed-Loop Utility
+        # GAP 3: Evaluation Gap — Static Metrics vs. Practical Operational Utility
         # =========================================================================
+        if is_nlp:
+            gap3_title = f"Disconnection Between Static Discrimination Metrics and Live Operational Utility in {topic}"
+            gap3_desc = (
+                f"Existing papers predominantly report standard offline classification metrics (Accuracy, F1-Score, AUC-ROC) "
+                f"under fixed 50% decision thresholds. However, none of the examined studies evaluate cost-sensitive utility "
+                f"(e.g., asymmetric penalty of false positives where legitimate communication is suppressed), user cognitive friction, "
+                f"or calibration error in streaming production triage environments."
+            )
+            gap3_dir = (
+                "Design prospective human-AI collaborative simulation trials measuring cost-sensitive utility functions, "
+                "expected calibration error (ECE), and downstream triage turnaround times."
+            )
+        else:
+            gap3_title = f"Disconnection Between Static Offline Metrics and Practical Operational Utility in {topic}"
+            gap3_desc = (
+                f"Existing literature predominantly measures algorithmic success using static discrimination metrics evaluated on "
+                f"retrospective test partitions. None of the examined studies validate whether statistical improvements translate into "
+                f"measurable reductions in operational latency, human decision friction, or reliability under live production workflows."
+            )
+            gap3_dir = (
+                "Design prospective evaluation protocols measuring end-to-end task turnaround, decision calibration, "
+                "and counterfactual human-in-the-loop performance under realistic operational constraints."
+            )
+
         gaps.append({
-            "gap_title": f"Disconnection Between Static Offline Metrics and Live Closed-Loop Utility in {topic}",
+            "gap_title": gap3_title,
             "category": "Evaluation Gap",
-            "description": (
-                f"Existing literature predominantly measures algorithmic success using static discrimination metrics (accuracy, theoretical travel times, simulated costs) "
-                f"evaluated on retrospective, pre-curated test partitions. However, none of the examined studies validate whether "
-                f"these statistical improvements translate into measurable reductions in live response latency, dispatcher cognitive burden, "
-                f"or human-in-the-loop decision efficacy under realistic dispatch workflows."
-            ),
+            "description": gap3_desc,
             "evidence": [
-                f"{t} evaluates performance via retrospective offline metrics without prospective human-in-the-loop or hardware-in-the-loop validation."
+                f"{t} evaluates performance via retrospective offline metrics without cost-sensitive or calibration stress testing."
                 for t in paper_titles[:min(3, num_papers)]
             ],
             "affected_papers": paper_titles[:min(4, num_papers)],
             "why_it_matters": (
-                "High statistical simulation scores do not guarantee real-world efficacy; without prospective human-AI concordance studies, "
-                "deployed systems risk user friction, alert fatigue, and unverified decision bottlenecks."
+                "High offline statistical simulation scores do not guarantee real-world efficacy; without calibrated decision boundaries "
+                "and asymmetric cost modeling, deployed systems risk user alert fatigue and costly classification errors."
             ),
-            "potential_direction": (
-                "Design prospective human-in-the-loop simulation trials measuring dispatcher cognitive workload, end-to-end mission turnaround latency, "
-                "and counterfactual decision impact under realistic dispatch command integration."
-            ),
+            "potential_direction": gap3_dir,
             "confidence": "High",
             "confidence_rationale": "Unanimous across all analyzed papers, which uniformly rely on retrospective test holdouts.",
             "priority": 3,
         })
 
         # =========================================================================
-        # GAP 4: Practical / Implementation Gap — High Compute Overhead vs. Edge Units
+        # GAP 4: Practical / Implementation Gap — High Computational Footprint & Latency
         # =========================================================================
         compute_affected = [
             t for l, t in all_limitations
-            if re.search(r"\b(compute|gpu|memory|latency|slow|expensive|overhead|hardware|mobile|edge)\b", l, re.I)
+            if re.search(r"\b(compute|gpu|memory|latency|slow|expensive|overhead|hardware|mobile|edge|parameter)\b", l, re.I)
         ]
         if not compute_affected:
             compute_affected = paper_titles[:min(2, num_papers)]
         else:
             compute_affected = list(dict.fromkeys(compute_affected))
 
+        if is_nlp:
+            gap4_title = f"High Computational Latency and Resource Footprint of High-Capacity Models in {topic}"
+            gap4_desc = (
+                f"State-of-the-art transformer and LLM-based architectures identified in {topic} demand substantial GPU compute "
+                f"budgets and introduce significant per-message inference latency. This computational overhead hampers sub-second "
+                f"line-rate processing in high-volume enterprise email gateways and edge mail servers."
+            )
+            gap4_dir = (
+                "Explore knowledge distillation, structured model pruning, and 8-bit quantization to produce compact surrogate "
+                "classifiers that retain over 98% of full-model accuracy while reducing inference latency under 50ms."
+            )
+        elif is_mobility:
+            gap4_title = f"High Computational Latency Restricting Sub-Second Deployment on Mobile & Edge Dispatch Units"
+            gap4_desc = (
+                f"Complex deep neural routing models demand substantial GPU compute budgets, hindering sub-second execution on "
+                f"onboard mobile dispatch terminals and field vehicle communication units."
+            )
+            gap4_dir = "Explore post-training structural pruning and integer quantization optimized for low-power onboard vehicular processing."
+        else:
+            gap4_title = f"High Computational Latency and Parameter Footprint Restricting Scalable Deployment in {topic}"
+            gap4_desc = (
+                f"Leading deep neural and complex optimization methodologies identified in {topic} demand substantial floating-point "
+                f"budgets and dedicated high-end GPU hardware, hindering cost-effective scaling and low-latency deployment."
+            )
+            gap4_dir = "Explore knowledge distillation, structural parameter pruning, and quantized inference architectures."
+
         gaps.append({
-            "gap_title": f"High Computational Latency Restricting Sub-Second Deployment on Mobile & Edge Dispatch Units",
+            "gap_title": gap4_title,
             "category": "Practical/Implementation Gap",
-            "description": (
-                f"Leading deep neural and complex optimization methodologies identified in {topic} demand substantial floating-point compute budgets "
-                f"and dedicated server hardware. This severe resource footprint precludes execution directly on onboard mobile dispatch terminals, "
-                f"low-power vehicle telemetry hardware, and field-edge communication gateways."
-            ),
+            "description": gap4_desc,
             "evidence": [
-                f"{t} highlights high compute footprint and hardware demands as explicit operational constraints."
+                f"{t} highlights substantial computational overhead and inference latency as explicit operational constraints."
                 for t in compute_affected[:3]
             ],
             "affected_papers": compute_affected,
             "why_it_matters": (
-                f"In high-stakes applications like {topic}, rerouting latencies exceeding sub-second thresholds cause vehicles to miss optimal intersection turns, "
-                f"defeating the purpose of real-time optimization."
+                f"In high-throughput {topic} systems, latencies exceeding throughput budgets cause queuing bottlenecks, "
+                f"driving infrastructure costs and delaying critical automated verdicts."
             ),
-            "potential_direction": (
-                "Explore post-training structural pruning, neural surrogate approximations, and integer quantization specifically optimized "
-                "for low-power onboard vehicular processing units."
-            ),
+            "potential_direction": gap4_dir,
             "confidence": "Medium",
             "confidence_rationale": "Directly supported by operational overhead mentions in analyzed manuscripts.",
             "priority": 4,
         })
 
         # =========================================================================
-        # GAP 5: Integration Gap — Multi-Agent Fleet Coordination and Cross-Infrastructure Interoperability
+        # GAP 5: Integration & Architectural Gap — Hybridization and Multimodal Fusion
         # =========================================================================
+        if is_nlp:
+            gap5_title = f"Limited Multimodal and Hybrid Model Fusion Across Complementary Paradigms in {topic}"
+            gap5_desc = (
+                f"Existing literature predominantly isolates individual algorithmic families—comparing pure Transformer attention models, "
+                f"capsule networks, or gradient boosted trees separately. There is a marked absence of unified hybrid architectures that "
+                f"effectively fuse dense transformer semantic embeddings, capsule spatial routing, and tabular metadata features "
+                f"into an interpretable joint classification engine."
+            )
+            gap5_dir = (
+                "Design multi-branch hybrid architectures combining hierarchical attention, capsule networks for syntactic routing, "
+                "and gradient-boosted decision trees over header metadata to achieve synergistic, explainable spam classification."
+            )
+        elif is_mobility:
+            gap5_title = f"Absence of Multi-Agent Fleet Coordination and Municipal Infrastructure Interoperability"
+            gap5_desc = (
+                f"Current studies evaluate route optimization for individual vehicles in isolation without multi-vehicle fleet coordination "
+                f"or bidirectional interoperability with municipal infrastructure (such as adaptive traffic signals and IoT sensor networks)."
+            )
+            gap5_dir = "Formulate decentralized multi-agent reinforcement learning (MARL) frameworks for vehicle-to-infrastructure coordination."
+        else:
+            gap5_title = f"Limited Architectural Hybridization and Cross-Modality Representation Fusion in {topic}"
+            gap5_desc = (
+                f"Current studies evaluate individual algorithmic paradigms in isolation, lacking unified multi-branch architectures "
+                f"that effectively combine complementary representations (e.g., deep latent embeddings with structured domain features)."
+            )
+            gap5_dir = "Formulate unified hybrid architectures with adaptive cross-attention fusion and interpretable decision layers."
+
         gaps.append({
-            "gap_title": f"Absence of Multi-Agent Fleet Coordination and Municipal Infrastructure Interoperability",
+            "gap_title": gap5_title,
             "category": "Integration Gap",
-            "description": (
-                f"Current studies evaluate route optimization for individual vehicles or static assignments in relative isolation. "
-                f"Real-world emergency operations intrinsically demand coordinated multi-vehicle fleet optimization, dynamic demand relocation, "
-                f"and bidirectional interoperability with municipal infrastructure (such as adaptive traffic signals, hospital emergency bed status, and municipal IoT sensors)."
-            ),
+            "description": gap5_desc,
             "evidence": [
-                f"{t} focuses on isolated vehicle pathfinding without integrating multi-agent fleet cooperation or municipal sensor streams."
+                f"{t} focuses on single-model paradigms without investigating complementary hybrid architecture ensembling."
                 for t in paper_titles[:min(3, num_papers)]
             ],
             "affected_papers": paper_titles[:min(3, num_papers)],
             "why_it_matters": (
-                "Uncoordinated vehicle routing leads to fleet clustering, route contention, and sub-optimal city-wide emergency coverage."
+                f"Single-paradigm models suffer blind spots; synergistic hybrid architectures combine the representational strengths "
+                f"of diverse model families while mitigating individual failure modes."
             ),
-            "potential_direction": (
-                "Formulate decentralized multi-agent reinforcement learning (MARL) frameworks coupled with standardized IoT communication protocols "
-                "for seamless vehicle-to-infrastructure (V2I) coordination."
-            ),
+            "potential_direction": gap5_dir,
             "confidence": "Medium",
-            "confidence_rationale": "Synthesized from structural omissions in cross-paper routing architecture formulations.",
+            "confidence_rationale": "Synthesized from structural omissions in cross-paper architecture formulations.",
             "priority": 5,
         })
 
@@ -393,10 +510,10 @@ Please perform cross-paper synthesis and return ONLY a valid JSON object matchin
         major_cats = list(dict.fromkeys([g["category"] for g in gaps]))
         overall_summary = (
             f"A cross-paper analytical synthesis of {num_papers} research papers investigating '{topic}' reveals significant progress in "
-            f"foundational architectural modeling and theoretical pathing accuracy. However, cross-comparative examination reveals "
+            f"foundational algorithmic modeling. However, cross-comparative examination reveals "
             f"systemic research frontiers that cannot be resolved within single-manuscript boundaries.\n\n"
-            f"The primary bottleneck across the literature is the **{gaps[0]['gap_title']}** ({gaps[0]['category']}), followed by "
-            f"critical constraints in topological diversity and multi-agent infrastructure interoperability. "
+            f"The primary bottleneck across the literature is **{gaps[0]['gap_title']}** ({gaps[0]['category']}), followed by "
+            f"critical constraints in benchmark diversity, operational latency, and hybrid representation fusion. "
             f"Subsequent researchers are uniquely positioned to target these high-impact frontiers to transition algorithms "
             f"into reliable, generalizable, and operationally viable systems."
         )

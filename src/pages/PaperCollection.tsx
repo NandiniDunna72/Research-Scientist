@@ -42,7 +42,7 @@ export const PaperCollection: React.FC = () => {
   } = useResearch();
 
   // Search & Filters State
-  const [searchQuery, setSearchQuery] = useState(currentProject?.topic || '');
+  const [searchQuery, setSearchQuery] = useState('');
   const [lastSearchedTopic, setLastSearchedTopic] = useState<string>(currentProject?.topic || '');
   const [selectedSource, setSelectedSource] = useState<string>('all');
   const [selectedYear, setSelectedYear] = useState<string>('all');
@@ -52,20 +52,19 @@ export const PaperCollection: React.FC = () => {
   // Paper Details Modal
   const [activeModalPaper, setActiveModalPaper] = useState<ResearchPaper | null>(null);
 
-  // Load existing saved papers when project is mounted
+  // Load existing saved papers or cached papers when project is mounted,
+  // and automatically trigger discovery if no papers are loaded yet
   useEffect(() => {
     const targetId = id || currentProject?.id;
     if (targetId) {
-      loadProjectPapers(targetId);
+      loadProjectPapers(targetId).then((loaded) => {
+        const topic = currentProject?.topic || currentProject?.title;
+        if ((!loaded || loaded.length === 0) && papers.length === 0 && topic && !isDiscovering) {
+          discoverPapers(topic, 20);
+        }
+      });
     }
   }, [id, currentProject?.id]);
-
-  useEffect(() => {
-    const topicToSearch = currentProject?.topic || currentProject?.title;
-    if (topicToSearch) {
-      setSearchQuery(topicToSearch);
-    }
-  }, [currentProject?.id, currentProject?.topic]);
 
   const handleDiscoverSearch = async () => {
     const topicFallback = currentProject?.topic || currentProject?.title || 'AI Research';
@@ -180,9 +179,9 @@ export const PaperCollection: React.FC = () => {
             variant="outline"
             size="sm"
             onClick={() => selectAllPapers(!allSelected)}
-            className="text-xs gap-1.5 font-medium border-border/80 hover:bg-secondary/80"
+            className="text-xs gap-1.5 font-medium border-[#1e2548] bg-[#0c102c] text-slate-300 hover:text-white hover:border-cyan-500/40"
           >
-            {allSelected ? <CheckSquare className="w-3.5 h-3.5 text-indigo-500" /> : <Square className="w-3.5 h-3.5" />}
+            {allSelected ? <CheckSquare className="w-3.5 h-3.5 text-cyan-400" /> : <Square className="w-3.5 h-3.5 text-slate-400" />}
             <span>{allSelected ? 'Deselect All' : 'Select All'}</span>
           </Button>
 
@@ -190,27 +189,25 @@ export const PaperCollection: React.FC = () => {
             variant="outline"
             size="sm"
             onClick={handleAnalyzeAll}
-            className="text-xs gap-1.5 font-medium border-border/80 hover:bg-secondary/80"
+            className="text-xs gap-1.5 font-medium border-[#1e2548] bg-[#0c102c] text-slate-300 hover:text-white hover:border-cyan-500/40"
           >
             <span>Analyze All</span>
           </Button>
 
-          <Button
-            variant="primary"
-            size="sm"
+          <button
             disabled={selectedCount === 0}
             onClick={handleAnalyzeSelected}
-            className="text-xs gap-2 shadow-glow-sm hover:shadow-glow-md font-semibold px-4 py-2"
+            className="btn-ai-glow-cyan-magenta text-white text-xs font-semibold px-4 py-2 rounded-xl flex items-center gap-2 shadow-[0_0_15px_rgba(217,70,239,0.4)] disabled:opacity-50 disabled:pointer-events-none transition-all cursor-pointer"
           >
-            <FileSearch className="w-4 h-4" />
+            <FileSearch className="w-4 h-4 text-cyan-300" />
             <span>Analyze Selected ({selectedCount})</span>
             <ArrowRight className="w-3.5 h-3.5" />
-          </Button>
+          </button>
         </div>
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5 card-premium p-4 rounded-2xl">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5 bg-[#0a0d24]/90 backdrop-blur-xl border border-[#1a2044] p-4 rounded-2xl shadow-sm">
         {/* Search */}
         <div className="lg:col-span-2 flex items-center gap-2">
           <Input
@@ -223,25 +220,23 @@ export const PaperCollection: React.FC = () => {
               }
             }}
             placeholder="Search papers, topic, or keywords..."
-            icon={<Search className="w-4 h-4" />}
-            className="text-xs h-9 flex-1 bg-background/50 border-border/70 focus:border-indigo-500 rounded-xl"
+            icon={<Search className="w-4 h-4 text-cyan-400" />}
+            className="text-xs h-9 flex-1 bg-[#07091a]/95 border-[#1e2548] text-white focus:border-cyan-400 rounded-xl"
           />
-          <Button
+          <button
             type="button"
-            variant="primary"
-            size="sm"
             onClick={handleDiscoverSearch}
             disabled={isDiscovering}
-            className="h-9 px-4 text-xs shrink-0 gap-2 shadow-glow-xs hover:shadow-glow-sm font-semibold rounded-xl"
+            className="btn-ai-glow-cyan-magenta text-white h-9 px-4 text-xs shrink-0 flex items-center gap-2 font-semibold rounded-xl shadow-xs cursor-pointer disabled:opacity-50"
             title="Search Semantic Scholar, arXiv, and Crossref"
           >
             {isDiscovering ? (
-              <Sparkles className="w-3.5 h-3.5 animate-spin" />
+              <Sparkles className="w-3.5 h-3.5 animate-spin text-amber-200" />
             ) : (
               <Search className="w-3.5 h-3.5" />
             )}
             <span>Discover</span>
-          </Button>
+          </button>
         </div>
 
         {/* Filter by Source */}
@@ -249,11 +244,11 @@ export const PaperCollection: React.FC = () => {
           <select
             value={selectedSource}
             onChange={(e) => setSelectedSource(e.target.value)}
-            className="w-full text-xs h-9 rounded-xl border border-border/70 bg-background/50 px-3 text-foreground focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 font-medium transition-all"
+            className="w-full text-xs h-9 rounded-xl border border-[#1e2548] bg-[#07091a]/95 px-3 text-slate-300 focus:outline-none focus:border-cyan-400 font-medium transition-all"
           >
             <option value="all">All Repositories</option>
             {availableSources.map((src) => (
-              <option key={src} value={src}>{src}</option>
+              <option key={src} value={src} className="bg-[#090d24] text-white">{src}</option>
             ))}
           </select>
         </div>
@@ -263,11 +258,11 @@ export const PaperCollection: React.FC = () => {
           <select
             value={selectedYear}
             onChange={(e) => setSelectedYear(e.target.value)}
-            className="w-full text-xs h-9 rounded-xl border border-border/70 bg-background/50 px-3 text-foreground focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 font-medium transition-all"
+            className="w-full text-xs h-9 rounded-xl border border-[#1e2548] bg-[#07091a]/95 px-3 text-slate-300 focus:outline-none focus:border-cyan-400 font-medium transition-all"
           >
             <option value="all">All Publication Years</option>
             {availableYears.map((yr) => (
-              <option key={yr} value={yr.toString()}>{yr}</option>
+              <option key={yr} value={yr.toString()} className="bg-[#090d24] text-white">{yr}</option>
             ))}
           </select>
         </div>
@@ -277,7 +272,7 @@ export const PaperCollection: React.FC = () => {
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as any)}
-            className="w-full text-xs h-9 rounded-xl border border-border/70 bg-background/50 px-3 text-foreground focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 font-medium transition-all"
+            className="w-full text-xs h-9 rounded-xl border border-[#1e2548] bg-[#07091a]/95 px-3 text-slate-300 focus:outline-none focus:border-cyan-400 font-medium transition-all"
           >
             <option value="relevance">Sort by Relevance</option>
             <option value="year">Sort by Newest Year</option>
@@ -293,9 +288,9 @@ export const PaperCollection: React.FC = () => {
           return (
             <div
               key={paper.id}
-              className={`card-premium card-glow-indigo rounded-2xl p-5 transition-all duration-300 ${
+              className={`neon-card-project rounded-2xl p-5 transition-all duration-300 ${
                 isSelected
-                  ? 'border-indigo-500/50 bg-indigo-50/20 dark:bg-indigo-950/25 ring-1 ring-indigo-500/30'
+                  ? 'border-cyan-400/70 bg-[#0d1438]/95 shadow-[0_0_25px_rgba(6,182,212,0.25)]'
                   : 'hover:-translate-y-0.5'
               }`}
             >
@@ -473,10 +468,10 @@ export const PaperCollection: React.FC = () => {
                   variant="primary"
                   size="sm"
                   onClick={handleDiscoverSearch}
-                  className="gap-2 mx-auto shadow-xs"
+                  className="gap-2 mx-auto shadow-xs font-semibold px-4 py-2"
                 >
                   <Sparkles className="w-3.5 h-3.5" />
-                  <span>Discover Papers for "{currentProject?.topic || searchQuery || 'Research Topic'}"</span>
+                  <span>Discover Academic Papers for Project</span>
                 </Button>
               )}
             </div>

@@ -20,6 +20,7 @@ from app.schemas.methodology import (
     MethodologyStatusResponse,
 )
 from app.services.methodology_service import MethodologyService
+from app.services.paper_analysis import PaperAnalysisService
 
 logger = logging.getLogger("methodology_router")
 logger.setLevel(logging.INFO)
@@ -185,16 +186,17 @@ async def _execute_methodology_generation(
             )
             .first()
         )
-        if analysis:
-            analyzed_rows.append((paper, analysis))
+        if not analysis:
+            analysis = await PaperAnalysisService.ensure_paper_analysis(paper, current_user.id, db)
+        analyzed_rows.append((paper, analysis))
 
     if not analyzed_rows:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Analyze research papers before generating a research methodology. Please complete Paper Analysis first.",
+            detail="No papers found in project. Please add or discover research papers first.",
         )
 
-    # 2. Retrieve research gaps
+    # 2. Retrieve research gaps (or synthesize from analyzed papers)
     gap_record = (
         db.query(ResearchGapAnalysis)
         .filter(
@@ -215,25 +217,34 @@ async def _execute_methodology_generation(
             .first()
         )
 
-    if not gap_record or not gap_record.gaps:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Identify research gaps before generating a research methodology. Please complete Research Gap Identification first.",
-        )
+    if gap_record and gap_record.gaps:
+        gaps_data = [
+            {
+                "id": g.id,
+                "gap_title": g.gap_title,
+                "category": g.category,
+                "description": g.description,
+                "affected_papers": g.affected_papers,
+                "why_it_matters": g.why_it_matters,
+            }
+            for g in gap_record.gaps
+        ]
+    else:
+        # Synthesize domain research gaps directly from all analyzed papers
+        gaps_data = []
+        for p, a in analyzed_rows[:6]:
+            lims = a.limitations or []
+            lim_text = lims[0] if lims else f"Methodological and generalization constraints identified in {p.title}."
+            gaps_data.append({
+                "id": p.id,
+                "gap_title": f"Methodological Frontier in {p.title[:40]}",
+                "category": "Methodological & Robustness",
+                "description": lim_text,
+                "affected_papers": [p.title],
+                "why_it_matters": "Requires novel architecture formulation to overcome existing empirical boundaries.",
+            })
 
-    gaps_data = [
-        {
-            "id": g.id,
-            "gap_title": g.gap_title,
-            "category": g.category,
-            "description": g.description,
-            "affected_papers": g.affected_papers,
-            "why_it_matters": g.why_it_matters,
-        }
-        for g in gap_record.gaps
-    ]
-
-    # 3. Retrieve research questions
+    # 3. Retrieve research questions (or synthesize from analyzed papers)
     question_record = (
         db.query(ResearchQuestionGeneration)
         .filter(
@@ -254,23 +265,35 @@ async def _execute_methodology_generation(
             .first()
         )
 
-    if not question_record or not question_record.questions:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Generate research questions before generating a research methodology. Please complete Research Question Generation first.",
-        )
+    if question_record and question_record.questions:
+        questions_data = [
+            {
+                "id": q.id,
+                "question": q.question,
+                "type": q.question_type,
+                "related_gap_title": q.related_gap_title,
+                "motivation": q.motivation,
+                "expected_investigation": q.expected_investigation,
+            }
+            for q in question_record.questions
+        ]
+    else:
+        # Synthesize domain research questions directly from all analyzed papers
+        questions_data = []
+        q_idx = 1
+        for p, a in analyzed_rows[:5]:
+            rqs = a.research_questions or []
+            for rq in rqs[:1]:
+                questions_data.append({
+                    "id": q_idx,
+                    "question": rq,
+                    "type": "empirical",
+                    "related_gap_title": f"Advancing {p.title[:30]}",
+                    "motivation": "Systematic evaluation under controlled benchmark conditions.",
+                    "expected_investigation": a.approach or "Empirical pipeline formulation",
+                })
+                q_idx += 1
 
-    questions_data = [
-        {
-            "id": q.id,
-            "question": q.question,
-            "type": q.question_type,
-            "related_gap_title": q.related_gap_title,
-            "motivation": q.motivation,
-            "expected_investigation": q.expected_investigation,
-        }
-        for q in question_record.questions
-    ]
 
     # 4. Retrieve literature review (supporting context, optional)
     lit_record = (

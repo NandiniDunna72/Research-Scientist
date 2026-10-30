@@ -665,28 +665,26 @@ def download_presentation(
             detail=f"Presentation {presentation_id} not found.",
         )
 
-    file_path = record.file_path
-    # If file was not yet generated or missing on disk, generate it now on-the-fly
-    if not file_path or not os.path.exists(file_path):
-        target_path = str(STORAGE_DIR / f"project_{project.id}_presentation_{record.id}.pptx")
-        data_dict = {
-            "id": record.id,
-            "project_id": record.project_id,
-            "title": record.title,
-            "presentation_type": record.presentation_type,
-            "theme": record.theme,
-            "style": record.style,
-            "slide_count": record.slide_count,
-            "presenter_name": record.presenter_name,
-            "institution": record.institution,
-            "supervisor_name": record.supervisor_name,
-            "include_speaker_notes": record.include_speaker_notes,
-            "slides": record.structured_slides,
-        }
-        PresentationService.generate_pptx_file(data_dict, output_file_path=target_path)
-        record.file_path = target_path
-        db.commit()
-        file_path = target_path
+    # Always compile authentic 16:9 .pptx with latest layout engine on download
+    target_path = str(STORAGE_DIR / f"project_{project.id}_presentation_{record.id}.pptx")
+    data_dict = {
+        "id": record.id,
+        "project_id": record.project_id,
+        "title": record.title,
+        "presentation_type": record.presentation_type,
+        "theme": record.theme,
+        "style": record.style,
+        "slide_count": record.slide_count,
+        "presenter_name": record.presenter_name,
+        "institution": record.institution,
+        "supervisor_name": record.supervisor_name,
+        "include_speaker_notes": record.include_speaker_notes,
+        "slides": record.structured_slides,
+    }
+    PresentationService.generate_pptx_file(data_dict, output_file_path=target_path)
+    record.file_path = target_path
+    db.commit()
+    file_path = target_path
 
     safe_title = re.sub(r"[^\w\s-]", "", record.title).strip().replace(" ", "_")
     if not safe_title:

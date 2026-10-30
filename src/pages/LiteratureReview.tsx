@@ -79,9 +79,7 @@ export const LiteratureReview: React.FC = () => {
 
           // Fallback to context papers if backend returned empty list
           if (papersList.length === 0 && papers.length > 0) {
-            const locallyAnalyzed = papers.filter((p) => p.analyzed || p.selected);
-            const sourceList = locallyAnalyzed.length > 0 ? locallyAnalyzed : papers.slice(0, 5);
-            papersList = sourceList.map((p, idx) => ({
+            papersList = papers.map((p, idx) => ({
               id: p.backendId || idx + 1,
               title: p.title,
               authors: p.authors,
@@ -106,8 +104,7 @@ export const LiteratureReview: React.FC = () => {
         } else {
           // Unauthenticated / offline preview mode
           if (papers.length > 0) {
-            const sourceList = papers.slice(0, 5);
-            const mockList = sourceList.map((p, idx) => ({
+            const mockList = papers.map((p, idx) => ({
               id: p.backendId || idx + 1,
               title: p.title,
               authors: p.authors,
@@ -379,7 +376,7 @@ export const LiteratureReview: React.FC = () => {
         <div className="pb-3 border-b border-border">
           <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground flex items-center gap-2.5">
             <BookMarked className="w-6 h-6 text-indigo-600" />
-            Literature Review Generation
+            Literature Review
           </h1>
           <p className="text-xs text-muted-foreground mt-1">
             Transform analyzed research papers into a structured, doctoral-grade literature review.
@@ -408,7 +405,7 @@ export const LiteratureReview: React.FC = () => {
             <div className="flex items-center gap-2.5">
               <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
                 <BookMarked className="w-6 h-6 text-indigo-600" />
-                Literature Review Generation
+                Literature Review
               </h1>
               <Badge variant="indigo" size="md">
                 {analyzedPapers.length} Papers Analyzed
@@ -538,20 +535,25 @@ export const LiteratureReview: React.FC = () => {
   return (
     <div className="space-y-7 animate-fade-in pb-12">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b border-border">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-[#1b2245]">
         <div>
-          <div className="flex items-center gap-2.5">
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
-              <BookMarked className="w-6 h-6 text-indigo-600" />
-              Literature Review & Synthesis
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-[#0a0d26] border border-cyan-400/50 flex items-center justify-center text-cyan-300 shadow-[0_0_18px_rgba(6,182,212,0.4)]">
+              <BookMarked className="w-5 h-5 animate-neon-pulse" />
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight font-heading gradient-heading">
+              Literature Review
             </h1>
-            <Badge variant="indigo" size="md">
+            <Badge variant="indigo" size="md" className="border-cyan-400/40 text-cyan-300 font-mono">
+              Module 6
+            </Badge>
+            <Badge variant="secondary" size="md" className="border-cyan-400/40 text-cyan-300 font-mono">
               {data.papers_with_analysis} of {data.papers_considered} Papers Analyzed
             </Badge>
           </div>
-          <p className="text-xs text-muted-foreground mt-1 max-w-3xl leading-relaxed">
-            <strong className="text-foreground">Topic: </strong>
-            {data.topic}
+          <p className="text-xs sm:text-sm text-slate-400 mt-1.5 max-w-3xl leading-relaxed">
+            <strong className="text-cyan-300 font-mono">Topic: </strong>
+            <span className="text-slate-300">{data.topic}</span>
           </p>
         </div>
 
@@ -561,10 +563,10 @@ export const LiteratureReview: React.FC = () => {
             variant="outline"
             size="sm"
             onClick={handleExportCSV}
-            className="text-xs gap-1.5"
+            className="text-xs gap-1.5 border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/10"
             title="Download structured paper summary matrix as CSV"
           >
-            <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600" />
+            <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-400" />
             <span>Export CSV</span>
           </Button>
 
@@ -572,30 +574,27 @@ export const LiteratureReview: React.FC = () => {
             variant="outline"
             size="sm"
             onClick={handleExportMarkdown}
-            className="text-xs gap-1.5"
+            className="text-xs gap-1.5 border-cyan-500/30 text-cyan-300 hover:bg-cyan-500/10"
             title="Download full academic literature review brief"
           >
             <Download className="w-3.5 h-3.5" />
             <span>Export Brief</span>
           </Button>
 
-          <Button
-            variant="primary"
-            size="sm"
-            isLoading={isRegenerating}
+          <button
             disabled={isRegenerating}
             onClick={handleRegenerate}
-            className="text-xs gap-1.5"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold text-white btn-ai-glow-cyan-magenta shadow-lg active:scale-95 transition-all disabled:opacity-50"
             title="Re-synthesize literature review with latest paper analysis and gaps"
           >
-            <RefreshCw className="w-3.5 h-3.5" />
-            <span>Regenerate Review</span>
-          </Button>
+            <RefreshCw className={`w-3.5 h-3.5 ${isRegenerating ? 'animate-spin' : ''}`} />
+            <span>{isRegenerating ? 'Synthesizing...' : 'Regenerate Review'}</span>
+          </button>
         </div>
       </div>
 
       {/* Navigation View Tabs */}
-      <div className="flex items-center gap-1.5 border-b border-border/80 overflow-x-auto no-scrollbar pb-1">
+      <div className="flex items-center gap-1.5 p-1.5 bg-[#0a0d24]/90 rounded-2xl border border-[#1a2044] overflow-x-auto no-scrollbar w-fit shadow-lg backdrop-blur-xl">
         {[
           { key: 'all', label: 'All Review Sections', icon: FileText },
           { key: 'themes', label: 'Thematic Clusters', icon: Layers, count: data.themes.length },
@@ -609,17 +608,17 @@ export const LiteratureReview: React.FC = () => {
             <button
               key={tab.key}
               onClick={() => setActiveViewTab(tab.key as any)}
-              className={`flex items-center gap-2 px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors whitespace-nowrap ${
+              className={`flex items-center gap-2 px-4 py-1.5 text-xs font-semibold rounded-xl transition-all duration-200 whitespace-nowrap cursor-pointer ${
                 isActive
-                  ? 'bg-indigo-600 text-white shadow-xs'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-secondary/70'
+                  ? 'bg-gradient-to-r from-violet-600/40 via-purple-600/40 to-cyan-500/30 border border-cyan-400/60 text-cyan-200 shadow-[0_0_15px_rgba(6,182,212,0.35)] scale-[1.02]'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 border border-transparent'
               }`}
             >
-              <Icon className="w-3.5 h-3.5" />
+              <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-cyan-300 animate-pulse' : 'text-slate-500'}`} />
               <span>{tab.label}</span>
               {tab.count !== undefined && (
-                <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
-                  isActive ? 'bg-white/20 text-white' : 'bg-secondary text-muted-foreground'
+                <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-mono ${
+                  isActive ? 'bg-cyan-400/20 text-cyan-200 border border-cyan-400/30' : 'bg-[#141b3d] text-slate-400'
                 }`}>
                   {tab.count}
                 </span>

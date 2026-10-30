@@ -31,6 +31,15 @@ class Settings(BaseSettings):
     AI_PROVIDER: str = "auto"
     AI_MODEL: str = "gemini-3.5-flash"
 
+    # Free Agentic RAG Configuration (Local / Open-Source)
+    LLM_PROVIDER: str = "ollama"
+    OLLAMA_BASE_URL: str = "http://localhost:11434"
+    LLM_MODEL: str = "llama3.2:3b"
+    EMBEDDING_MODEL: str = "BAAI/bge-small-en-v1.5"
+    VECTOR_STORE_PATH: str = "./data/chroma"
+    RAG_TOP_K: int = 5
+    MAX_RETRIEVAL_ITERATIONS: int = 2
+
     @field_validator("DATABASE_URL", mode="before")
     @classmethod
     def assemble_db_connection(cls, v: Union[str, None]) -> str:

@@ -539,11 +539,35 @@ Generate a comprehensive academic research methodology in JSON with the followin
         }
 
         # C. Proposed Approach (Multi-stage breakdown)
-        unique_algos = list(dict.fromkeys(paper_algorithms))[:4] or ["Vision Transformer (ViT)", "DenseNet-121", "Cross-Attention Fusion Network", "Calibrated Logistic Predictor"]
-        stage_1_inputs = ["Raw heterogeneous inputs (multimodal imaging / clinical tabular features / text records)"]
-        stage_1_outputs = ["Harmonized, quality-audited, preprocessed feature representations"]
+        unique_algos = list(dict.fromkeys(paper_algorithms))[:4] or ["Transformer-based Attention Model", "Hybrid Representation Network", "Regularized Classifier Backbone", "Calibrated Predictor"]
 
-        stage_2_inputs = ["Harmonized multimodal feature embeddings"]
+        is_nlp_m = any(w in lower_topic for w in ["email", "spam", "nlp", "language", "llm", "text", "translation", "sentiment"])
+        is_agri_m = any(w in lower_topic for w in ["plant", "crop", "leaf", "disease", "agriculture", "botan", "farming", "foliar"])
+        is_mobility_m = any(w in lower_topic for w in ["ambulance", "route", "routing", "traffic", "vehicle", "fleet", "dispatch", "transit"])
+        is_clinical_m = any(w in lower_topic for w in ["cancer", "oncology", "clinical", "pathology", "patient", "biomedical", "tumor"])
+
+        if is_nlp_m:
+            stage_1_inputs = [f"Raw text streams, email MIME payloads, header records, and message corpora for {topic}"]
+            stage_1_outputs = ["Tokenized subword tensors, extracted metadata feature vectors, and attention masks"]
+            domain_sources = ["Enron Spam Archive", "SpamAssassin Corpus", "Hugging Face Text Benchmarks", "Zenodo Academic Repositories"]
+        elif is_mobility_m:
+            stage_1_inputs = ["Vehicle GPS telemetry feeds, dynamic traffic sensor streams, and road network topology"]
+            stage_1_outputs = ["Time-varying road graph embeddings and normalized incident manifests"]
+            domain_sources = ["OpenStreetMap (OSMnx)", "Municipal Traffic Open Data Portals", "Urban Telematics Trajectory Archives"]
+        elif is_agri_m:
+            stage_1_inputs = ["High-resolution foliar disease imagery, multispectral canopy captures, and weather covariates"]
+            stage_1_outputs = ["Calibrated image patch tensors and extracted vegetation indices"]
+            domain_sources = ["PlantVillage Open Archive", "Agro-Vision Benchmark Corpora", "Zenodo Foliar Pathology Datasets"]
+        elif is_clinical_m:
+            stage_1_inputs = ["Clinical whole-slide histology images, patient covariates, and diagnostic annotations"]
+            stage_1_outputs = ["Normalized patch embeddings, tissue segmentation masks, and clinical feature tables"]
+            domain_sources = ["The Cancer Genome Atlas (TCGA)", "MIMIC-IV Clinical Database", "PhysioNet Research Archives"]
+        else:
+            stage_1_inputs = [f"Raw domain records, empirical features, and benchmark inputs for {topic}"]
+            stage_1_outputs = ["Normalized, quality-audited, preprocessed feature representations"]
+            domain_sources = ["Hugging Face Datasets", "Zenodo Academic Archives", "UCI Machine Learning Repository"]
+
+        stage_2_inputs = stage_1_outputs
         stage_2_outputs = ["Joint latent representations with cross-modal alignment weights"]
 
         stage_3_inputs = ["Joint representations and downstream task objectives"]
@@ -567,7 +591,7 @@ Generate a comprehensive academic research methodology in JSON with the followin
                 "expected_outputs": stage_1_outputs,
                 "relationship_to_gaps": f"Directly addresses {top_gap_names[0] if top_gap_names else 'data quality gap'} by eliminating distribution discrepancies before representation learning.",
                 "distinction_from_existing_work": (
-                    "Unlike prior literature that discarded incomplete patient/data samples or applied naive mean imputation, "
+                    "Unlike prior literature that discarded incomplete data samples or applied naive imputation, "
                     "the proposed approach leverages modality-aware robust imputation with missingness indicators."
                 ),
             },
@@ -607,7 +631,7 @@ Generate a comprehensive academic research methodology in JSON with the followin
                 ],
                 "expected_inputs": stage_3_inputs,
                 "expected_outputs": stage_3_outputs,
-                "relationship_to_gaps": "Supports safety-critical validation requirements and clinical/operational trustworthiness.",
+                "relationship_to_gaps": "Supports safety-critical validation requirements and practical operational trustworthiness.",
                 "distinction_from_existing_work": (
                     "Most surveyed studies reported uncalibrated softmax scores without uncertainty margins. "
                     "Our architecture delivers dual predictive outputs: class distribution plus empirical predictive variance."
@@ -616,17 +640,14 @@ Generate a comprehensive academic research methodology in JSON with the followin
         ]
 
         # D. Data Collection
-        unique_datasets = list(dict.fromkeys(paper_datasets))[:4] or ["Standard Domain Archive (e.g., TCGA / MIMIC-IV / Public Benchmark)", "Synthetic Validation Cohort"]
+        unique_datasets = list(dict.fromkeys(paper_datasets))[:4] or domain_sources[:2]
         data_collection = {
             "required_data": [
                 f"Multi-cohort primary domain samples relevant to {topic}",
-                "Structured contextual metadata (demographics, clinical/technical covariates)",
+                "Structured contextual metadata and descriptive covariates",
                 "Standard ground-truth annotations verified by multiple annotators / consensus labels",
             ],
-            "potential_sources": unique_datasets + [
-                "PhysioNet / Open-access biomedical & AI research repositories",
-                "Zenodo / Hugging Face Datasets with verified provenance",
-            ],
+            "potential_sources": unique_datasets + domain_sources,
             "collection_methods": [
                 "Automated API querying of verified public academic archives with checksum verification",
                 "Cohort stratification based on predefined demographic and technical criteria",

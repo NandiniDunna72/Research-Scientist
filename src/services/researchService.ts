@@ -93,7 +93,12 @@ export const researchService = {
       }
     }
     const local = getStored<ResearchProject[]>(STORAGE_KEYS.PROJECTS, []);
-    return local.filter((p) => !p.id.startsWith('proj-healthcare-ai') && !p.id.startsWith('proj-llm-edu') && !p.id.startsWith('proj-traffic-ai'));
+    const valid = local.filter((p) => !p.id.startsWith('proj-healthcare-ai') && !p.id.startsWith('proj-llm-edu') && !p.id.startsWith('proj-traffic-ai'));
+    if (valid.length === 0) {
+      setStored(STORAGE_KEYS.PROJECTS, mockProjects);
+      return mockProjects;
+    }
+    return valid;
   },
 
   async getProjectById(id: string): Promise<ResearchProject | null> {

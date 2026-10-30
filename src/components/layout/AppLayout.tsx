@@ -28,10 +28,10 @@ export const AppLayout: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-background bg-tech-grid text-foreground flex flex-col antialiased relative selection:bg-indigo-500/20 selection:text-indigo-600 dark:selection:text-indigo-300">
-      {/* Ambient Lighting Orbs for Immersive Visual Depth */}
-      <div className="fixed top-[-10%] left-1/4 w-[750px] h-[750px] bg-gradient-to-br from-indigo-500/[0.08] to-purple-500/[0.05] dark:from-indigo-500/[0.12] dark:to-purple-600/[0.08] rounded-full blur-[160px] pointer-events-none -z-10" />
-      <div className="fixed bottom-0 right-5 w-[650px] h-[650px] bg-gradient-to-tl from-cyan-500/[0.04] to-indigo-600/[0.06] dark:from-cyan-500/[0.08] dark:to-indigo-600/[0.1] rounded-full blur-[160px] pointer-events-none -z-10" />
-      <div className="fixed top-1/2 left-[-10%] w-[500px] h-[500px] bg-purple-500/[0.03] dark:bg-purple-500/[0.06] rounded-full blur-[140px] pointer-events-none -z-10" />
+      {/* Ambient Lighting Orbs for Immersive Cyberpunk Visual Depth */}
+      <div className="fixed top-[-10%] left-1/4 w-[750px] h-[750px] bg-gradient-to-br from-indigo-500/[0.08] to-purple-600/[0.08] dark:from-indigo-600/[0.18] dark:to-purple-600/[0.14] rounded-full blur-[160px] pointer-events-none -z-10" />
+      <div className="fixed bottom-0 right-5 w-[650px] h-[650px] bg-gradient-to-tl from-cyan-500/[0.08] to-indigo-600/[0.1] dark:from-cyan-400/[0.15] dark:to-purple-600/[0.15] rounded-full blur-[160px] pointer-events-none -z-10" />
+      <div className="fixed top-1/2 left-[-10%] w-[500px] h-[500px] bg-purple-500/[0.05] dark:bg-fuchsia-600/[0.1] rounded-full blur-[140px] pointer-events-none -z-10" />
 
       {/* Sidebar */}
       <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />

@@ -125,56 +125,64 @@ export const NewResearch: React.FC = () => {
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8 animate-fade-in">
+    <div className="max-w-4xl mx-auto space-y-8 animate-fade-in relative pb-12">
+      {/* Background Telemetry Ghost Lines */}
+      <div className="absolute top-0 right-0 pointer-events-none opacity-25 hidden xl:block select-none font-mono text-[9px] text-cyan-400 space-y-0.5 leading-tight text-right">
+        <div>AGENTIC PIPELINE: READY</div>
+        <div>EMBEDDING MODEL: TEXT-EMBEDDING-004</div>
+        <div>VECTOR STORE: PGVECTOR (HNSW INDEX)</div>
+        <div>INGESTION STATUS: STANDBY</div>
+      </div>
+
       {/* Page Header */}
       <div>
-        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 text-xs font-semibold mb-2">
-          <Sparkles className="w-3.5 h-3.5" />
-          Autonomous Paper Discovery
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#101436] border border-cyan-500/40 text-cyan-300 text-xs font-semibold mb-2 shadow-[0_0_10px_rgba(6,182,212,0.2)]">
+          <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+          <span className="font-mono text-[10.5px] uppercase font-bold tracking-wider">Autonomous Paper Discovery</span>
         </div>
-        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">
+        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white font-heading">
           Start a New Research Project
         </h1>
-        <p className="text-xs sm:text-sm text-muted-foreground mt-1 max-w-2xl leading-relaxed">
-          Specify your research topic or scientific question. Our agent will index peer-reviewed literature, score semantic relevance, and initialize the structured research pipeline.
+        <p className="text-xs sm:text-sm text-slate-400 mt-1 max-w-2xl leading-relaxed">
+          Specify your research topic or scientific hypothesis. Our autonomous engine will index peer-reviewed literature across academic repositories, score semantic relevance, and initialize the structured research pipeline.
         </p>
       </div>
 
       <form onSubmit={handleStartSearch} className="space-y-6">
         {/* Main Topic Input Card */}
-        <Card className="border-indigo-100 dark:border-indigo-900/40 shadow-sm">
+        <Card className="neon-card-project border-cyan-500/35 shadow-[0_0_25px_rgba(6,182,212,0.1)]">
           <CardHeader>
-            <CardTitle className="text-base font-bold flex items-center gap-2">
-              <BookOpen className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-              Research Title or Topic
+            <CardTitle className="text-base font-bold flex items-center gap-2 text-white">
+              <BookOpen className="w-4 h-4 text-cyan-400" />
+              <span>Research Title or Topic</span>
             </CardTitle>
-            <CardDescription>
-              Be as specific as possible to maximize discovery accuracy
+            <CardDescription className="text-slate-400">
+              Be as specific as possible to maximize semantic retrieval accuracy
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <Input
               value={topic}
               onChange={(e) => setTopic(e.target.value)}
-              placeholder="Enter your research topic, e.g. AI-powered healthcare diagnosis with multimodal foundation models"
+              placeholder="Enter your research topic, e.g. AI based ambulance route optimization"
               required
-              className="text-base h-12 px-4 font-medium"
-              icon={<Search className="w-4 h-4" />}
+              className="text-sm sm:text-base h-12 px-4 font-medium bg-[#07091a]/95 border-cyan-500/30 text-white placeholder-slate-500 focus-visible:border-cyan-400 focus-visible:ring-cyan-400"
+              icon={<Search className="w-4 h-4 text-cyan-400" />}
             />
 
             {/* Quick Inspiration Chips */}
-            <div className="space-y-1.5">
-              <label className="text-[11px] font-semibold text-muted-foreground flex items-center gap-1">
-                <Lightbulb className="w-3 h-3 text-amber-500" />
-                Suggested Research Ideas:
+            <div className="space-y-1.5 pt-1">
+              <label className="text-[11px] font-semibold text-slate-400 flex items-center gap-1 font-mono uppercase tracking-wider">
+                <Lightbulb className="w-3.5 h-3.5 text-amber-400" />
+                <span>Suggested Research Hypotheses:</span>
               </label>
-              <div className="flex flex-wrap gap-1.5">
+              <div className="flex flex-wrap gap-2">
                 {suggestedTopics.map((sug, idx) => (
                   <button
                     key={idx}
                     type="button"
                     onClick={() => setTopic(sug)}
-                    className="text-[11px] px-2.5 py-1 rounded-lg bg-secondary/70 hover:bg-indigo-50 dark:hover:bg-indigo-950/60 text-foreground border border-border/70 hover:border-indigo-300 dark:hover:border-indigo-800 transition-colors text-left"
+                    className="text-xs px-3 py-1.5 rounded-xl bg-[#0d1230] text-slate-300 border border-[#1e2548] hover:border-cyan-500/50 hover:text-white hover:bg-[#121844] shadow-xs transition-all text-left cursor-pointer"
                   >
                     {sug}
                   </button>
@@ -187,25 +195,25 @@ export const NewResearch: React.FC = () => {
         {/* Configuration Parameters Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Research Domain & Keywords */}
-          <Card>
+          <Card className="neon-card-project">
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-bold flex items-center gap-2">
-                <Tag className="w-4 h-4 text-indigo-600" />
-                Domain & Keywords
+              <CardTitle className="text-sm font-bold flex items-center gap-2 text-white">
+                <Tag className="w-4 h-4 text-cyan-400" />
+                <span>Domain & Keywords</span>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4 text-xs">
               <div>
-                <label className="font-semibold text-foreground block mb-1.5">
+                <label className="font-semibold text-slate-300 block mb-1.5">
                   Research Domain
                 </label>
                 <select
                   value={domain}
                   onChange={(e) => setDomain(e.target.value)}
-                  className="w-full rounded-lg border border-input bg-background px-3 py-2 text-xs focus:outline-none focus:ring-1.5 focus:ring-indigo-600"
+                  className="w-full rounded-xl border border-[#1e2548] bg-[#07091a]/95 px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-400 transition-colors cursor-pointer"
                 >
                   {domainsList.map((d) => (
-                    <option key={d} value={d}>
+                    <option key={d} value={d} className="bg-[#090d24] text-white">
                       {d}
                     </option>
                   ))}
@@ -213,30 +221,30 @@ export const NewResearch: React.FC = () => {
               </div>
 
               <div>
-                <label className="font-semibold text-foreground block mb-1.5">
+                <label className="font-semibold text-slate-300 block mb-1.5">
                   Keywords (Comma Separated)
                 </label>
                 <Input
                   value={keywords}
                   onChange={(e) => setKeywords(e.target.value)}
-                  placeholder="e.g. Multimodal AI, Oncology, Transformers"
-                  className="text-xs h-9"
+                  placeholder="e.g. Route Optimization, Reinforcement Learning, Emergency AI"
+                  className="text-xs h-9 bg-[#07091a]/95 border-[#1e2548] text-white"
                 />
               </div>
             </CardContent>
           </Card>
 
           {/* Paper Count & Publication Year Range */}
-          <Card>
+          <Card className="neon-card-project">
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-bold flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-indigo-600" />
-                Discovery Scope & Dates
+              <CardTitle className="text-sm font-bold flex items-center gap-2 text-white">
+                <Calendar className="w-4 h-4 text-cyan-400" />
+                <span>Discovery Scope & Dates</span>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4 text-xs">
               <div>
-                <label className="font-semibold text-foreground block mb-1.5">
+                <label className="font-semibold text-slate-300 block mb-1.5">
                   Number of Papers to Ingest
                 </label>
                 <div className="grid grid-cols-4 gap-2">
@@ -245,10 +253,10 @@ export const NewResearch: React.FC = () => {
                       key={count}
                       type="button"
                       onClick={() => setPaperCount(count)}
-                      className={`py-1.5 text-xs font-semibold rounded-lg border transition-all ${
+                      className={`py-2 text-xs font-semibold rounded-xl border transition-all cursor-pointer ${
                         paperCount === count
-                          ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
-                          : 'bg-card text-foreground border-border hover:bg-secondary'
+                          ? 'bg-cyan-500/20 text-cyan-300 border-cyan-400 shadow-[0_0_12px_rgba(6,182,212,0.3)] font-bold'
+                          : 'bg-[#0a0f28] text-slate-400 border-[#1a2044] hover:bg-[#121840] hover:text-white'
                       }`}
                     >
                       {count}
@@ -259,7 +267,7 @@ export const NewResearch: React.FC = () => {
               </div>
 
               <div>
-                <label className="font-semibold text-foreground block mb-1.5">
+                <label className="font-semibold text-slate-300 block mb-1.5">
                   Publication Year Range
                 </label>
                 <div className="grid grid-cols-2 gap-2">
@@ -270,7 +278,7 @@ export const NewResearch: React.FC = () => {
                     value={startYear}
                     onChange={(e) => setStartYear(Number(e.target.value))}
                     placeholder="From Year"
-                    className="text-xs h-9"
+                    className="text-xs h-9 bg-[#07091a]/95 border-[#1e2548] text-white font-mono"
                   />
                   <Input
                     type="number"
@@ -279,7 +287,7 @@ export const NewResearch: React.FC = () => {
                     value={endYear}
                     onChange={(e) => setEndYear(Number(e.target.value))}
                     placeholder="To Year"
-                    className="text-xs h-9"
+                    className="text-xs h-9 bg-[#07091a]/95 border-[#1e2548] text-white font-mono"
                   />
                 </div>
               </div>
@@ -288,14 +296,14 @@ export const NewResearch: React.FC = () => {
         </div>
 
         {/* Preferred Academic Sources */}
-        <Card>
+        <Card className="neon-card-project">
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-bold flex items-center gap-2">
-              <Database className="w-4 h-4 text-indigo-600" />
-              Preferred Literature Repositories
+            <CardTitle className="text-sm font-bold flex items-center gap-2 text-white">
+              <Database className="w-4 h-4 text-cyan-400" />
+              <span>Preferred Literature Repositories</span>
             </CardTitle>
-            <CardDescription>
-              Select repositories to search and index papers from
+            <CardDescription className="text-slate-400">
+              Select academic indexing sources and preprint servers to ingest papers from
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -307,16 +315,16 @@ export const NewResearch: React.FC = () => {
                     key={source}
                     type="button"
                     onClick={() => toggleSource(source)}
-                    className={`flex items-center justify-between p-2.5 rounded-xl border text-xs font-medium transition-all ${
+                    className={`flex items-center justify-between p-2.5 rounded-xl border text-xs font-medium transition-all cursor-pointer ${
                       isSelected
-                        ? 'border-indigo-600 bg-indigo-50/70 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 shadow-2xs font-semibold'
-                        : 'border-border bg-card text-muted-foreground hover:bg-secondary hover:text-foreground'
+                        ? 'border-cyan-400/60 bg-cyan-500/15 text-cyan-200 shadow-[0_0_12px_rgba(6,182,212,0.2)] font-semibold'
+                        : 'border-[#1a2044] bg-[#090d24] text-slate-400 hover:bg-[#121638] hover:text-white'
                     }`}
                   >
                     <span>{source}</span>
                     {isSelected && (
-                      <div className="w-4 h-4 rounded-full bg-indigo-600 text-white flex items-center justify-center">
-                        <Check className="w-2.5 h-2.5" />
+                      <div className="w-4 h-4 rounded-full bg-cyan-500 text-black flex items-center justify-center font-bold">
+                        <Check className="w-2.5 h-2.5 stroke-[3]" />
                       </div>
                     )}
                   </button>
@@ -326,27 +334,25 @@ export const NewResearch: React.FC = () => {
           </CardContent>
         </Card>
 
-        {/* Action Button */}
-        <div className="flex items-center justify-end gap-3 pt-2">
-          <Button
+        {/* Action Buttons */}
+        <div className="flex items-center justify-end gap-3 pt-3">
+          <button
             type="button"
-            variant="ghost"
             onClick={() => navigate('/dashboard')}
+            className="px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-white transition-colors cursor-pointer"
           >
             Cancel
-          </Button>
+          </button>
 
-          <Button
+          <button
             type="submit"
-            variant="primary"
-            size="lg"
             disabled={!topic.trim()}
-            className="gap-2 px-8 text-sm shadow-md shadow-indigo-500/20"
+            className="btn-ai-glow-cyan-magenta text-white px-8 py-3 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 shadow-[0_0_20px_rgba(217,70,239,0.5)] transition-all cursor-pointer disabled:opacity-50 disabled:pointer-events-none"
           >
-            <Sparkles className="w-4 h-4" />
+            <Sparkles className="w-4 h-4 text-amber-200 animate-pulse" />
             <span>Find Related Papers</span>
             <ArrowRight className="w-4 h-4" />
-          </Button>
+          </button>
         </div>
       </form>
     </div>

@@ -399,14 +399,14 @@ export const ResearchGaps: React.FC<{ defaultTab?: 'gaps' | 'questions' }> = ({ 
               size="sm"
               onClick={() => handleRunAnalysis(!!report)}
               disabled={isAnalyzing}
-              className="text-xs gap-1.5 shadow-sm border-indigo-200 dark:border-indigo-800 hover:bg-indigo-50 dark:hover:bg-indigo-950/50"
+              className="text-xs gap-1.5 border-cyan-500/30 text-cyan-300 hover:bg-cyan-500/10"
             >
               {isAnalyzing ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin text-indigo-600" />
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-cyan-400" />
               ) : report ? (
-                <RefreshCw className="w-3.5 h-3.5 text-indigo-600" />
+                <RefreshCw className="w-3.5 h-3.5 text-cyan-400" />
               ) : (
-                <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
+                <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
               )}
               <span>{isAnalyzing ? 'Analyzing...' : report ? 'Regenerate Gaps' : 'Analyze Research Gaps'}</span>
             </Button>
@@ -418,23 +418,21 @@ export const ResearchGaps: React.FC<{ defaultTab?: 'gaps' | 'questions' }> = ({ 
               size="sm"
               onClick={() => handleGenerateQuestions(true)}
               disabled={isGeneratingQuestions || isAnalyzing}
-              className="text-xs gap-1.5 shadow-sm border-indigo-200 dark:border-indigo-800 hover:bg-indigo-50 dark:hover:bg-indigo-950/50"
+              className="text-xs gap-1.5 border-purple-500/30 text-purple-300 hover:bg-purple-500/10"
             >
               {isGeneratingQuestions ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin text-indigo-600" />
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-purple-400" />
               ) : (
-                <RefreshCw className="w-3.5 h-3.5 text-indigo-600" />
+                <RefreshCw className="w-3.5 h-3.5 text-purple-400" />
               )}
               <span>{isGeneratingQuestions ? 'Regenerating…' : 'Regenerate Questions'}</span>
             </Button>
           )}
 
-          <Button
-            variant="primary"
-            size="sm"
+          <button
             onClick={() => handleGenerateQuestions(false)}
             disabled={isGeneratingQuestions || isAnalyzing}
-            className="text-xs gap-1.5 shadow-sm"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold text-white btn-ai-glow-cyan-magenta shadow-lg active:scale-95 transition-all disabled:opacity-50"
           >
             {isGeneratingQuestions ? (
               <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -442,19 +440,19 @@ export const ResearchGaps: React.FC<{ defaultTab?: 'gaps' | 'questions' }> = ({ 
               <Lightbulb className="w-3.5 h-3.5" />
             )}
             <span>{isGeneratingQuestions ? 'Generating research questions…' : 'Generate Research Questions'}</span>
-          </Button>
+          </button>
         </div>
       </div>
 
       {/* Top View Selector Tabs */}
-      <div className="flex items-center gap-1.5 p-1 bg-secondary/50 rounded-2xl border border-border/60 max-w-fit shadow-2xs">
+      <div className="flex items-center gap-1.5 p-1.5 bg-[#0a0d24]/90 rounded-2xl border border-[#1a2044] max-w-fit shadow-lg backdrop-blur-xl">
         <button
           type="button"
           onClick={() => setMainTab('all')}
-          className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+          className={`px-4 py-1.5 rounded-xl text-xs font-bold transition-all duration-200 ${
             mainTab === 'all'
-              ? 'bg-card text-indigo-600 dark:text-indigo-400 shadow-2xs border border-border/60 scale-[1.01]'
-              : 'text-muted-foreground hover:text-foreground hover:bg-card/40'
+              ? 'bg-gradient-to-r from-violet-600/40 via-purple-600/40 to-cyan-500/30 border border-cyan-400/60 text-cyan-200 shadow-[0_0_15px_rgba(6,182,212,0.35)] scale-[1.02]'
+              : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 border border-transparent'
           }`}
         >
           All Overview
@@ -462,25 +460,25 @@ export const ResearchGaps: React.FC<{ defaultTab?: 'gaps' | 'questions' }> = ({ 
         <button
           type="button"
           onClick={() => setMainTab('gaps')}
-          className={`px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all ${
+          className={`px-4 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all duration-200 ${
             mainTab === 'gaps'
-              ? 'bg-card text-indigo-600 dark:text-indigo-400 shadow-2xs border border-border/60 scale-[1.01]'
-              : 'text-muted-foreground hover:text-foreground hover:bg-card/40'
+              ? 'bg-gradient-to-r from-violet-600/40 via-purple-600/40 to-cyan-500/30 border border-cyan-400/60 text-cyan-200 shadow-[0_0_15px_rgba(6,182,212,0.35)] scale-[1.02]'
+              : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 border border-transparent'
           }`}
         >
-          <AlertCircle className="w-3.5 h-3.5 text-amber-500" />
+          <AlertCircle className="w-3.5 h-3.5 text-amber-400" />
           <span>Research Gaps ({gaps.length})</span>
         </button>
         <button
           type="button"
           onClick={() => setMainTab('questions')}
-          className={`px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all ${
+          className={`px-4 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all duration-200 ${
             mainTab === 'questions'
-              ? 'bg-card text-indigo-600 dark:text-indigo-400 shadow-2xs border border-border/60 scale-[1.01]'
-              : 'text-muted-foreground hover:text-foreground hover:bg-card/40'
+              ? 'bg-gradient-to-r from-violet-600/40 via-purple-600/40 to-cyan-500/30 border border-cyan-400/60 text-cyan-200 shadow-[0_0_15px_rgba(6,182,212,0.35)] scale-[1.02]'
+              : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 border border-transparent'
           }`}
         >
-          <HelpCircle className="w-3.5 h-3.5 text-indigo-500" />
+          <HelpCircle className="w-3.5 h-3.5 text-cyan-400" />
           <span>Research Questions ({questions.length})</span>
         </button>
       </div>

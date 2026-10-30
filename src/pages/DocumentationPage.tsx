@@ -364,39 +364,42 @@ export const DocumentationPage: React.FC = () => {
   return (
     <div className="space-y-6 animate-fade-in pb-12">
       {/* Top Header Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-border">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#1b2245]">
         <div>
-          <div className="flex items-center gap-2 flex-wrap">
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
-              Generate Research Documentation
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-[#0a0d26] border border-cyan-400/50 flex items-center justify-center text-cyan-300 shadow-[0_0_18px_rgba(6,182,212,0.4)]">
+              <FileText className="w-5 h-5 animate-neon-pulse" />
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight font-heading gradient-heading">
+              Documentation
             </h1>
-            <Badge variant="indigo" size="md">
-              Module 9
+            <Badge variant="indigo" size="md" className="border-cyan-400/40 text-cyan-300 font-mono">
+              Module 10
             </Badge>
-            <Badge variant="outline" size="sm" className="font-mono text-[11px]">
+            <Badge variant="outline" size="sm" className="font-mono text-slate-300 border-slate-700">
               v{config.version || 1} • {config.template}
             </Badge>
             {hasUnsavedChanges && (
-              <Badge variant="warning" size="sm">
+              <Badge variant="warning" size="sm" className="bg-amber-500/20 text-amber-300 border-amber-400/30">
                 Unsaved Edits
               </Badge>
             )}
           </div>
-          <p className="text-xs text-muted-foreground mt-0.5 max-w-3xl">
+          <p className="text-xs sm:text-sm text-slate-400 mt-1.5 max-w-3xl leading-relaxed">
             Autonomous doctoral-grade manuscript drafting grounded in your papers, literature review, methodology, and system architecture.
           </p>
         </div>
 
         {/* Action Toolbar */}
-        <div className="flex items-center gap-2 flex-wrap shrink-0">
+        <div className="flex items-center gap-2.5 flex-wrap shrink-0">
           <Button
             variant="outline"
             size="sm"
             onClick={handleCopyMarkdown}
             disabled={!hasAnyContent}
-            className="text-xs gap-1.5 h-8.5"
+            className="text-xs gap-1.5 h-9 border-cyan-500/30 text-cyan-300 hover:bg-cyan-500/10"
           >
-            {copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+            {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
             <span>{copied ? 'Copied' : 'Copy MD'}</span>
           </Button>
 
@@ -405,7 +408,7 @@ export const DocumentationPage: React.FC = () => {
             size="sm"
             onClick={() => handleDownload('docx')}
             disabled={!hasAnyContent || isExporting !== null}
-            className="text-xs gap-1.5 h-8.5"
+            className="text-xs gap-1.5 h-9 border-cyan-500/30 text-cyan-300 hover:bg-cyan-500/10"
           >
             {isExporting === 'docx' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
             <span>Export DOCX</span>
@@ -416,7 +419,7 @@ export const DocumentationPage: React.FC = () => {
             size="sm"
             onClick={() => handleDownload('pdf')}
             disabled={!hasAnyContent || isExporting !== null}
-            className="text-xs gap-1.5 h-8.5"
+            className="text-xs gap-1.5 h-9 border-purple-500/30 text-purple-300 hover:bg-purple-500/10"
           >
             {isExporting === 'pdf' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
             <span>Export PDF</span>
@@ -428,23 +431,21 @@ export const DocumentationPage: React.FC = () => {
               size="sm"
               onClick={handleSaveChanges}
               disabled={isSaving}
-              className="text-xs gap-1.5 h-8.5 text-emerald-600 dark:text-emerald-400 border-emerald-500/40"
+              className="text-xs gap-1.5 h-9 text-emerald-300 border border-emerald-500/40 bg-emerald-950/40"
             >
               {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
               <span>Save Changes</span>
             </Button>
           )}
 
-          <Button
-            variant="primary"
-            size="sm"
+          <button
             onClick={handleGenerate}
             disabled={isGenerating}
-            className="text-xs gap-1.5 h-8.5 shadow-sm"
+            className="inline-flex items-center gap-2 h-9 px-4 rounded-xl text-xs font-semibold text-white btn-ai-glow-cyan-magenta shadow-lg active:scale-95 transition-all disabled:opacity-50"
           >
             {isGenerating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
             <span>{hasAnyContent ? 'Regenerate Manuscript' : 'Generate Manuscript'}</span>
-          </Button>
+          </button>
         </div>
       </div>
 

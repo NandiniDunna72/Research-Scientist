@@ -448,8 +448,8 @@ ${m.execution_plan.map((s) => `### Step ${s.step_number}: ${s.activity} (${s.est
 
   // 3. Not Yet Generated State (Prerequisites & Readiness Checklist)
   if (!methodology) {
-    const isReady = status?.ready ?? false;
-    const hasPapers = status?.has_analyses ?? false;
+    const isReady = status?.ready || (status?.papers_count ?? 0) > 0 || (status?.has_analyses ?? false);
+    const hasPapers = (status?.papers_count ?? 0) > 0 || (status?.has_analyses ?? false);
     const hasGaps = status?.has_gaps ?? false;
     const hasQuestions = status?.has_questions ?? false;
     const hasLit = status?.has_literature_review ?? false;
@@ -460,14 +460,14 @@ ${m.execution_plan.map((s) => `### Step ${s.step_number}: ${s.activity} (${s.est
         <div className="pb-4 border-b border-border">
           <div className="flex items-center gap-2">
             <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
-              Research Methodology Generation
+              Methodology
             </h1>
             <Badge variant="indigo" size="md">
-              Module 6
+              Module 7
             </Badge>
           </div>
           <p className="text-xs sm:text-sm text-muted-foreground mt-1 max-w-3xl leading-relaxed">
-            Convert your research questions and identified gaps into a concrete, technically feasible, publishable research plan.
+            Synthesizes across ALL papers in your research workspace to formulate a concrete, technically feasible, publishable research methodology for your related topic.
           </p>
         </div>
 
@@ -649,7 +649,7 @@ ${m.execution_plan.map((s) => `### Step ${s.step_number}: ${s.activity} (${s.est
                   Generate Comprehensive Research Methodology
                 </h3>
                 <p className="text-xs text-muted-foreground max-w-xl leading-relaxed">
-                  Formulates all 14 structured sections: research overview, design rationale, data acquisition, preprocessing, algorithms, experimental protocol, evaluation metrics, and execution schedule.
+                  Synthesizes across ALL papers in this project to formulate all 14 structured methodology sections: research overview, design rationale, data acquisition, preprocessing, algorithms, experimental protocol, evaluation metrics, and execution schedule.
                 </p>
               </div>
 
@@ -687,40 +687,43 @@ ${m.execution_plan.map((s) => `### Step ${s.step_number}: ${s.activity} (${s.est
   const ep = methodology.execution_plan;
 
   return (
-    <div className="space-y-8 animate-fade-in">
+    <div className="space-y-8 animate-fade-in pb-16">
       {/* Header Bar */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-border">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-[#1b2245]">
         <div>
-          <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
-              Research Methodology Plan
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-[#0a0d26] border border-cyan-400/50 flex items-center justify-center text-cyan-300 shadow-[0_0_18px_rgba(6,182,212,0.4)]">
+              <Workflow className="w-5 h-5 animate-neon-pulse" />
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight font-heading gradient-heading">
+              Methodology
             </h1>
-            <Badge variant="indigo" size="md">
-              Module 6
+            <Badge variant="indigo" size="md" className="border-cyan-400/40 text-cyan-300 font-mono">
+              Module 7
             </Badge>
-            <Badge variant="outline" size="sm" className="font-mono">
+            <Badge variant="outline" size="sm" className="font-mono text-slate-300 border-slate-700">
               Version v{methodology.version}
             </Badge>
             {methodology.has_literature_review && (
-              <Badge variant="indigo" size="sm">
+              <Badge variant="secondary" size="sm" className="border-fuchsia-500/30 text-fuchsia-300 font-mono">
                 Literature Review Linked
               </Badge>
             )}
           </div>
-          <p className="text-xs sm:text-sm text-muted-foreground mt-1 max-w-3xl leading-relaxed">
+          <p className="text-xs sm:text-sm text-slate-400 mt-1.5 max-w-3xl leading-relaxed">
             {methodology.topic}
           </p>
         </div>
 
         {/* Global Action Buttons */}
-        <div className="flex flex-wrap items-center gap-2 shrink-0">
+        <div className="flex flex-wrap items-center gap-2.5 shrink-0">
           <Button
             variant="outline"
             size="sm"
             onClick={handleCopyMarkdown}
-            className="text-xs"
+            className="text-xs border-cyan-500/30 text-cyan-300 hover:bg-cyan-500/10 h-9"
           >
-            {copied ? <Check className="w-3.5 h-3.5 mr-1.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 mr-1.5" />}
+            {copied ? <Check className="w-3.5 h-3.5 mr-1.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5 mr-1.5" />}
             {copied ? 'Copied' : 'Copy Plan'}
           </Button>
 
@@ -728,71 +731,69 @@ ${m.execution_plan.map((s) => `### Step ${s.step_number}: ${s.activity} (${s.est
             variant="outline"
             size="sm"
             onClick={handleDownloadMarkdown}
-            className="text-xs"
+            className="text-xs border-cyan-500/30 text-cyan-300 hover:bg-cyan-500/10 h-9"
           >
             <Download className="w-3.5 h-3.5 mr-1.5" />
             Download Markdown
           </Button>
 
-          <Button
-            variant="primary"
-            size="sm"
+          <button
             disabled={isRegenerating}
             onClick={handleRegenerate}
-            className="text-xs shadow-xs"
+            className="inline-flex items-center gap-2 px-4 h-9 rounded-xl text-xs font-semibold text-white btn-ai-glow-cyan-magenta shadow-lg active:scale-95 transition-all disabled:opacity-50"
           >
             <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${isRegenerating ? 'animate-spin' : ''}`} />
             {isRegenerating ? 'Regenerating...' : 'Regenerate'}
-          </Button>
+          </button>
         </div>
       </div>
 
       {/* Upstream Evidence Grounding Summary Bar */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="p-3.5 rounded-xl border border-border bg-card">
-          <span className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground block">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div className="neon-card-project rounded-2xl p-4">
+          <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400 block font-mono">
             Papers Synthesized
           </span>
-          <span className="text-lg font-bold text-foreground font-mono">
+          <span className="text-2xl font-black text-cyan-400 font-mono tracking-tight drop-shadow-[0_0_12px_rgba(6,182,212,0.5)]">
             {methodology.papers_considered}
           </span>
-          <span className="text-[11px] text-muted-foreground block mt-0.5">Empirically analyzed</span>
+          <span className="text-[11px] text-slate-400 block mt-0.5">Empirically analyzed</span>
         </div>
 
-        <div className="p-3.5 rounded-xl border border-border bg-card">
-          <span className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground block">
+        <div className="neon-card-project rounded-2xl p-4">
+          <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400 block font-mono">
             Research Gaps Addressed
           </span>
-          <span className="text-lg font-bold text-foreground font-mono">
+          <span className="text-2xl font-black text-fuchsia-400 font-mono tracking-tight drop-shadow-[0_0_12px_rgba(217,70,239,0.5)]">
             {methodology.gaps_considered}
           </span>
-          <span className="text-[11px] text-muted-foreground block mt-0.5">Literature blind spots</span>
+          <span className="text-[11px] text-slate-400 block mt-0.5">Literature blind spots</span>
         </div>
 
-        <div className="p-3.5 rounded-xl border border-border bg-card">
-          <span className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground block">
+        <div className="neon-card-project rounded-2xl p-4">
+          <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400 block font-mono">
             Questions Grounded
           </span>
-          <span className="text-lg font-bold text-foreground font-mono">
+          <span className="text-2xl font-black text-cyan-300 font-mono tracking-tight drop-shadow-[0_0_12px_rgba(6,182,212,0.4)]">
             {methodology.questions_considered}
           </span>
-          <span className="text-[11px] text-muted-foreground block mt-0.5">Primary & secondary</span>
+          <span className="text-[11px] text-slate-400 block mt-0.5">Primary & secondary</span>
         </div>
 
-        <div className="p-3.5 rounded-xl border border-border bg-card">
-          <span className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground block">
+        <div className="neon-card-project rounded-2xl p-4">
+          <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400 block font-mono">
             Execution Schedule
           </span>
-          <span className="text-lg font-bold text-foreground font-mono">
+          <span className="text-2xl font-black text-emerald-400 font-mono tracking-tight drop-shadow-[0_0_12px_rgba(52,211,153,0.5)]">
             {ep.length}
           </span>
-          <span className="text-[11px] text-muted-foreground block mt-0.5">Structured phases</span>
+          <span className="text-[11px] text-slate-400 block mt-0.5">Structured phases</span>
         </div>
       </div>
 
       {/* View Filter Navigation Tabs & Section Expand All controls */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border pb-2">
-        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2">
+        <div className="flex items-center gap-1.5 p-1.5 bg-[#0a0d24]/90 rounded-2xl border border-[#1a2044] overflow-x-auto no-scrollbar w-fit shadow-lg backdrop-blur-xl">
           {[
             { key: 'all', label: 'All 14 Sections' },
             { key: 'overview', label: 'Overview & Design' },
@@ -805,10 +806,10 @@ ${m.execution_plan.map((s) => `### Step ${s.step_number}: ${s.activity} (${s.est
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key as ViewTab)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors ${
+              className={`px-4 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all duration-200 cursor-pointer ${
                 activeTab === tab.key
-                  ? 'bg-indigo-600 text-white shadow-xs'
-                  : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
+                  ? 'bg-gradient-to-r from-violet-600/40 via-purple-600/40 to-cyan-500/30 border border-cyan-400/60 text-cyan-200 shadow-[0_0_15px_rgba(6,182,212,0.35)] scale-[1.02]'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 border border-transparent'
               }`}
             >
               {tab.label}
@@ -819,14 +820,14 @@ ${m.execution_plan.map((s) => `### Step ${s.step_number}: ${s.activity} (${s.est
         <div className="flex items-center gap-2 shrink-0">
           <button
             onClick={() => toggleAllSections(true)}
-            className="text-[11px] text-muted-foreground hover:text-foreground underline underline-offset-4"
+            className="text-[11px] text-cyan-400 hover:text-cyan-300 underline underline-offset-4 font-mono"
           >
             Expand All
           </button>
-          <span className="text-muted-foreground text-xs">•</span>
+          <span className="text-slate-600 text-xs">•</span>
           <button
             onClick={() => toggleAllSections(false)}
-            className="text-[11px] text-muted-foreground hover:text-foreground underline underline-offset-4"
+            className="text-[11px] text-slate-400 hover:text-slate-200 underline underline-offset-4 font-mono"
           >
             Collapse All
           </button>

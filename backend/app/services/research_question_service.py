@@ -524,9 +524,9 @@ Please formulate 5 to 10 grounded research questions and return ONLY a valid JSO
         elif "integrat" in category.lower():
             return f"How can multimodal information fusion be optimized to bridge {clean_gap.lower()} without incurring catastrophic representation collapse?"
         elif "domain" in category.lower() or "practical" in category.lower():
-            return f"Under what clinical or operational distribution shifts does {clean_gap.lower()} most severely degrade performance, and how can test-time adaptation address this?"
+            return f"Under what real-world operational distribution shifts does {clean_gap.lower()} most severely degrade performance, and how can robust adaptation address this?"
         elif "optimi" in category.lower():
-            return f"What architectural optimization strategies enable resolution of {clean_gap.lower()} under constrained computational and memory budgets?"
+            return f"What architectural optimization strategies enable resolution of {clean_gap.lower()} under constrained computational and latency budgets?"
         else:
             return f"What are the primary theoretical and experimental factors governing {clean_gap.lower()} in {clean_topic}?"
 
@@ -548,7 +548,7 @@ Please formulate 5 to 10 grounded research questions and return ONLY a valid JSO
         supp_id_1 = f"rq-{existing_count + 2}"
         supplementary.append({
             "question_id": supp_id_1,
-            "question": f"How do state-of-the-art architectures comparatively perform when subjected to multi-institutional domain shifts in {topic}?",
+            "question": f"How do state-of-the-art architectures comparatively perform when subjected to multi-source domain shifts in {topic}?",
             "type": "Comparative Question",
             "question_type": "Comparative Question",
             "related_gap_id": top_gap_id,
@@ -564,7 +564,7 @@ Please formulate 5 to 10 grounded research questions and return ONLY a valid JSO
         supp_id_2 = f"rq-{existing_count + 3}"
         supplementary.append({
             "question_id": supp_id_2,
-            "question": f"What parameter-efficient fine-tuning or quantization strategies preserve diagnostic accuracy while enabling real-time inference in {topic}?",
+            "question": f"What parameter-efficient fine-tuning or quantization strategies preserve high task accuracy while enabling low-latency inference in {topic}?",
             "type": "Optimization Question",
             "question_type": "Optimization Question",
             "related_gap_id": top_gap_id,

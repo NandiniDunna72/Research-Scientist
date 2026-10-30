@@ -19,6 +19,7 @@ from app.routers.architecture import router as architecture_router
 from app.routers.documentation import router as documentation_router
 from app.routers.presentations import router as presentations_router
 from app.routers.rag_agent import router as rag_agent_router
+from app.routers.research_chat import router as research_chat_router
 
 
 
@@ -26,8 +27,9 @@ from app.routers.rag_agent import router as rag_agent_router
 async def lifespan(app: FastAPI):
     # Ensure database tables exist without dropping existing tables or data
     try:
+        import app.models  # Ensures all model tables are registered before create_all
         Base.metadata.create_all(bind=engine)
-        print("[INFO] PostgreSQL tables verified successfully.")
+        print("[INFO] Database tables verified successfully.")
     except Exception as e:
         print(f"[WARNING] Database verification warning: {e}")
     yield
@@ -82,6 +84,16 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     )
 
 
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    import traceback
+    traceback.print_exc()
+    return JSONResponse(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        content={"detail": f"Server error: {str(exc)}", "error": str(exc)},
+    )
+
+
 # Health Check Endpoints
 @app.get("/api/health", tags=["Health"], summary="API Health Check")
 def health_check():
@@ -122,6 +134,7 @@ app.include_router(architecture_router, prefix="/api/architecture", tags=["Syste
 app.include_router(documentation_router, prefix="/api/documentation", tags=["Research Documentation"])
 app.include_router(presentations_router, prefix="/api/presentations", tags=["Presentations"])
 app.include_router(rag_agent_router, prefix="/api/rag", tags=["RAG & Multi-Agent Engine"])
+app.include_router(research_chat_router, prefix="/api/research-chat", tags=["Agentic RAG Research Chat"])
 
 
 

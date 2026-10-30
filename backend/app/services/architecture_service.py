@@ -78,7 +78,12 @@ class ArchitectureService:
                         llm_res, topic, methodology, questions, gaps, papers, missing_context
                     )
                     if sanitized:
-                        return sanitized
+                        try:
+                            from app.schemas.architecture import ArchitectureResult
+                            ArchitectureResult(project_id=1, **sanitized)
+                            return sanitized
+                        except Exception as val_err:
+                            logger.warning(f"Sanitized LLM payload failed schema validation: {val_err}. Falling back to analytical engine.")
             except Exception as e:
                 logger.warning(f"LLM architecture generation failed: {e}. Falling back to analytical engine.")
 
@@ -245,23 +250,34 @@ Ensure the Mermaid diagram uses clean node IDs (A, B, C...) and double-quoted la
 
         # 1. Google Gemini API call
         if "AIza" in api_key or "gemini" in settings.AI_MODEL.lower():
-            try:
-                gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/{settings.AI_MODEL}:generateContent?key={api_key}"
-                gemini_payload = {
-                    "contents": [{"parts": [{"text": f"{system_prompt}\n\n{user_prompt}"}]}],
-                    "generationConfig": {
-                        "temperature": 0.2,
-                        "responseMimeType": "application/json",
-                    },
-                }
-                async with httpx.AsyncClient(timeout=45.0) as client:
-                    resp = await client.post(gemini_url, json=gemini_payload)
-                    if resp.status_code == 200:
-                        res_json = resp.json()
-                        raw_text = res_json["candidates"][0]["content"]["parts"][0]["text"]
-                        return json.loads(raw_text)
-            except Exception as e:
-                logger.warning(f"Gemini API call failed for architecture: {e}. Trying standard endpoint.")
+            candidate_models = [settings.AI_MODEL, "gemini-3.5-flash-lite", "gemini-2.5-flash"]
+            seen_models = set()
+            models_to_try = [m for m in candidate_models if not (m in seen_models or seen_models.add(m))]
+            for model_name in models_to_try:
+                try:
+                    gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={api_key}"
+                    gemini_payload = {
+                        "contents": [{"parts": [{"text": f"{system_prompt}\n\n{user_prompt}"}]}],
+                        "generationConfig": {
+                            "temperature": 0.2,
+                            "responseMimeType": "application/json",
+                        },
+                    }
+                    async with httpx.AsyncClient(timeout=35.0) as client:
+                        resp = await client.post(gemini_url, json=gemini_payload)
+                        if resp.status_code == 200:
+                            res_json = resp.json()
+                            candidate = res_json.get("candidates", [{}])[0]
+                            parts = candidate.get("content", {}).get("parts", [])
+                            if parts and "text" in parts[0]:
+                                raw_text = parts[0]["text"]
+                                parsed = json.loads(raw_text)
+                                if cls._is_valid_payload(parsed):
+                                    return parsed
+                        else:
+                            logger.warning(f"Gemini {model_name} returned status {resp.status_code}: {resp.text[:120]}")
+                except Exception as e:
+                    logger.warning(f"Gemini {model_name} API call failed for architecture: {e}")
 
         # 2. OpenAI or Groq endpoint
         openai_url = "https://api.openai.com/v1/chat/completions"
@@ -302,15 +318,70 @@ Ensure the Mermaid diagram uses clean node IDs (A, B, C...) and double-quoted la
         res["topic"] = topic
         res["missing_upstream_context"] = missing_context
 
-        # Validate Mermaid diagram
+        # 1. Validate / fix Mermaid diagram
         diag = res.get("architecture_diagram", {})
+        if not isinstance(diag, dict):
+            diag = {"diagram_type": "mermaid", "source": str(diag), "description": "System architecture diagram"}
         diag_src = diag.get("source", "")
         if not cls.validate_mermaid_syntax(diag_src):
-            # Fall back diagram if invalid
             res["architecture_diagram"] = cls._generate_fallback_mermaid(topic, methodology, papers)
         else:
             diag["source"] = cls.sanitize_mermaid_source(diag_src)
             res["architecture_diagram"] = diag
+
+        # 2. Fix data_storage_design and its er_diagram
+        dsd = res.get("data_storage_design", {})
+        if isinstance(dsd, dict):
+            er = dsd.get("er_diagram")
+            if isinstance(er, str):
+                dsd["er_diagram"] = {"diagram_type": "mermaid", "source": er}
+            entities = dsd.get("entities", [])
+            if isinstance(entities, list):
+                for ent in entities:
+                    if isinstance(ent, dict):
+                        if isinstance(ent.get("fields"), str):
+                            ent["fields"] = [ent["fields"]]
+                        if isinstance(ent.get("relationships"), str):
+                            ent["relationships"] = [ent["relationships"]]
+
+        # 3. Fix deployment_architecture
+        dep = res.get("deployment_architecture", {})
+        if isinstance(dep, dict):
+            if isinstance(dep.get("environment_configuration"), str):
+                dep["environment_configuration"] = [dep["environment_configuration"]]
+            if isinstance(dep.get("hosting_components"), str):
+                dep["hosting_components"] = [dep["hosting_components"]]
+
+        # 4. Fix alternative_architectures
+        alts = res.get("alternative_architectures", [])
+        if isinstance(alts, list):
+            for alt in alts:
+                if isinstance(alt, dict):
+                    if isinstance(alt.get("advantages"), str):
+                        alt["advantages"] = [alt["advantages"]]
+                    if isinstance(alt.get("disadvantages"), str):
+                        alt["disadvantages"] = [alt["disadvantages"]]
+
+        # 5. Fix components
+        comps = res.get("components", [])
+        if isinstance(comps, list):
+            for comp in comps:
+                if isinstance(comp, dict):
+                    for list_key in ("responsibilities", "inputs", "outputs", "technologies", "dependencies", "related_research_questions", "related_research_gaps"):
+                        if isinstance(comp.get(list_key), str):
+                            comp[list_key] = [comp[list_key]]
+                    if comp.get("implementation_status") not in ("implemented", "proposed", "optional"):
+                        comp["implementation_status"] = "proposed"
+
+        # 6. Fix implementation_plan
+        plan = res.get("implementation_plan", [])
+        if isinstance(plan, list):
+            for stage in plan:
+                if isinstance(stage, dict):
+                    if isinstance(stage.get("tasks"), str):
+                        stage["tasks"] = [stage["tasks"]]
+                    if isinstance(stage.get("dependencies"), str):
+                        stage["dependencies"] = [stage["dependencies"]]
 
         return res
 

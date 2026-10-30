@@ -20,6 +20,7 @@ from app.schemas.comparison import (
     EligiblePaperItem,
 )
 from app.services.comparison_service import PaperComparisonService
+from app.services.paper_analysis import PaperAnalysisService
 
 logger = logging.getLogger("comparison_router")
 logger.setLevel(logging.INFO)
@@ -158,10 +159,10 @@ async def _execute_comparison_generation(
             detail="Select at least two analyzed papers to compare.",
         )
 
-    if len(paper_ids) > 10:
+    if len(paper_ids) > 100:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Comparison supports a maximum of 10 papers per analysis.",
+            detail="Comparison supports a maximum of 100 papers per analysis.",
         )
 
     # Check duplicates
@@ -220,9 +221,8 @@ async def _execute_comparison_generation(
             detail=f"Paper(s) with ID(s) {', '.join(missing_ids)} not found.",
         )
 
-    # 3. Check Paper Analysis availability
+    # 3. Check Paper Analysis availability (auto-ensure analysis for all papers)
     analyzed_papers_data = []
-    unanalyzed_papers = []
 
     for paper in resolved_papers:
         analysis = (
@@ -234,35 +234,28 @@ async def _execute_comparison_generation(
             .first()
         )
         if not analysis:
-            unanalyzed_papers.append(paper.title)
-        else:
-            analyzed_papers_data.append({
-                "id": paper.id,
-                "title": paper.title,
-                "authors": paper.authors or [],
-                "publication_year": paper.publication_year,
-                "venue": paper.venue,
-                "doi": paper.doi,
-                "research_problem": analysis.research_problem,
-                "research_objective": analysis.research_objective,
-                "approach": analysis.approach,
-                "methodology": analysis.methodology,
-                "dataset": analysis.dataset,
-                "algorithms_and_models": analysis.algorithms_and_models,
-                "evaluation_metrics": analysis.evaluation_metrics if hasattr(analysis, 'evaluation_metrics') else None,
-                "key_results": analysis.key_results,
-                "key_findings": analysis.key_findings,
-                "contributions": analysis.contributions,
-                "limitations": analysis.limitations,
-                "future_work": analysis.future_work,
-            })
+            analysis = await PaperAnalysisService.ensure_paper_analysis(paper, current_user.id, db)
 
-    if unanalyzed_papers:
-        unanalyzed_list_str = ", ".join([f"'{t}'" for t in unanalyzed_papers])
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Analyze the selected papers before comparing them. The following paper(s) have no completed analysis: {unanalyzed_list_str}.",
-        )
+        analyzed_papers_data.append({
+            "id": paper.id,
+            "title": paper.title,
+            "authors": paper.authors or [],
+            "publication_year": paper.publication_year,
+            "venue": paper.venue,
+            "doi": paper.doi,
+            "research_problem": analysis.research_problem,
+            "research_objective": analysis.research_objective,
+            "approach": analysis.approach,
+            "methodology": analysis.methodology,
+            "dataset": analysis.dataset,
+            "algorithms_and_models": analysis.algorithms_and_models,
+            "evaluation_metrics": analysis.evaluation_metrics if hasattr(analysis, 'evaluation_metrics') else None,
+            "key_results": analysis.key_results,
+            "key_findings": analysis.key_findings,
+            "contributions": analysis.contributions,
+            "limitations": analysis.limitations,
+            "future_work": analysis.future_work,
+        })
 
     if len(analyzed_papers_data) < 2:
         raise HTTPException(
@@ -361,7 +354,7 @@ async def _execute_comparison_generation(
     summary="Get Eligible Papers for Comparison",
     description="Returns all project papers categorized by completed analysis availability for comparison selection.",
 )
-def get_eligible_papers(
+async def get_eligible_papers(
     project_id: Union[int, str],
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
@@ -395,51 +388,33 @@ def get_eligible_papers(
         papers = []
 
     eligible = []
-    unusable = []
-
     for p in papers:
-        analysis = (
-            db.query(PaperAnalysis)
-            .filter(
-                PaperAnalysis.paper_id == p.id,
-                PaperAnalysis.user_id == current_user.id,
+        analysis = await PaperAnalysisService.ensure_paper_analysis(p, current_user.id, db)
+        eligible.append(
+            EligiblePaperItem(
+                id=p.id,
+                title=p.title,
+                authors=p.authors or [],
+                publication_year=p.publication_year,
+                venue=p.venue,
+                abstract=p.abstract,
+                has_analysis=True,
+                methodology=analysis.methodology,
+                dataset=analysis.dataset,
+                algorithms_and_models=analysis.algorithms_and_models or [],
             )
-            .first()
         )
-        if analysis:
-            eligible.append(
-                EligiblePaperItem(
-                    id=p.id,
-                    title=p.title,
-                    authors=p.authors or [],
-                    publication_year=p.publication_year,
-                    venue=p.venue,
-                    abstract=p.abstract,
-                    has_analysis=True,
-                    methodology=analysis.methodology,
-                    dataset=analysis.dataset,
-                    algorithms_and_models=analysis.algorithms_and_models or [],
-                )
-            )
-        else:
-            unusable.append({
-                "id": p.id,
-                "title": p.title,
-                "publication_year": p.publication_year,
-                "has_analysis": False,
-                "reason": "Paper analysis not yet completed. Please complete Paper Analysis first.",
-            })
 
     message = None
     if len(eligible) < 2:
-        message = "At least two analyzed research papers are required for comparison."
+        message = "At least two research papers are required for comparison."
 
     return EligiblePapersResponse(
         project_id=project.id,
         total_papers=len(papers),
         eligible_count=len(eligible),
         eligible_papers=eligible,
-        unusable_papers=unusable,
+        unusable_papers=[],
         message=message,
     )
 

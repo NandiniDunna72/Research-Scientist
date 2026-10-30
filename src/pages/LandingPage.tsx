@@ -23,6 +23,7 @@ import {
   Search
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { AIAssistantPanel } from '../components/assistant/AIAssistantPanel';
 
 type PaperStage = 'closed' | 'opening' | 'open';
 type AuthMode = 'signin' | 'signup';
@@ -727,6 +728,9 @@ export const LandingPage: React.FC = () => {
           © 2026 AI Research Scientist. All Existing Research Modules & Full Pipeline Preserved.
         </div>
       </footer>
+
+      {/* Floating Chatbot Assistant on Bottom-Right */}
+      <AIAssistantPanel />
     </div>
   );
 };

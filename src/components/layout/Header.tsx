@@ -24,12 +24,12 @@ export const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
   const navigate = useNavigate();
 
   return (
-    <header className="sticky top-0 z-30 flex items-center justify-between h-16 px-4 sm:px-6 bg-card/75 dark:bg-card/70 backdrop-blur-xl border-b border-border/80 transition-colors shadow-xs">
+    <header className="sticky top-0 z-30 flex items-center justify-between h-16 px-4 sm:px-6 bg-[#0a0d24]/85 dark:bg-[#07091c]/90 backdrop-blur-xl border-b border-[#1a2044] transition-colors shadow-sm">
       {/* Left: Mobile Menu & Breadcrumbs */}
       <div className="flex items-center gap-3">
         <button
           onClick={onToggleSidebar}
-          className="lg:hidden p-2 text-muted-foreground hover:text-foreground hover:bg-secondary/80 rounded-xl transition-all"
+          className="lg:hidden p-2 text-slate-400 hover:text-white hover:bg-[#131738] rounded-xl transition-all"
           aria-label="Toggle navigation menu"
         >
           <Menu className="w-5 h-5" />
@@ -38,21 +38,21 @@ export const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
         <div className="hidden sm:flex items-center gap-2 text-xs">
           <span 
             onClick={() => navigate('/research')} 
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary/70 cursor-pointer font-medium transition-all"
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-slate-400 hover:text-white hover:bg-[#131738] cursor-pointer font-medium transition-all"
           >
-            <FolderKanban className="w-3.5 h-3.5 text-indigo-500" />
+            <FolderKanban className="w-3.5 h-3.5 text-cyan-400" />
             <span>Projects</span>
           </span>
-          <span className="text-muted-foreground/30 font-mono">/</span>
-          <span className="text-foreground font-semibold px-2 py-1">Workspace</span>
+          <span className="text-slate-600 font-mono">/</span>
+          <span className="text-white font-semibold px-2 py-1">Workspace</span>
 
-          {/* Live AI Engine Badge */}
-          <div className="hidden lg:inline-flex items-center gap-2 ml-2 px-3 py-1 rounded-full bg-indigo-500/[0.08] dark:bg-indigo-500/[0.14] border border-indigo-500/25 text-[11px] font-medium text-indigo-700 dark:text-indigo-300 shadow-xs">
+          {/* Live AI Engine Badge - Gemini 3.5 Flash Active */}
+          <div className="hidden lg:inline-flex items-center gap-2 ml-2 px-3 py-1 rounded-full bg-[#101432] border border-cyan-500/40 text-[10.5px] font-medium text-cyan-300 shadow-[0_0_10px_rgba(6,182,212,0.15)]">
             <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-400 shadow-[0_0_6px_#22d3ee]"></span>
             </span>
-            <span className="font-mono text-[10.5px] font-semibold tracking-wider uppercase">Gemini 3.5 Flash Active</span>
+            <span className="font-mono text-[10px] font-bold tracking-wider uppercase">GEMINI 3.5 FLASH ACTIVE</span>
           </div>
         </div>
       </div>
@@ -62,39 +62,37 @@ export const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
         {/* Quick Search */}
         <div 
           onClick={() => navigate('/research')}
-          className="hidden md:flex items-center gap-2.5 px-3.5 py-1.5 rounded-xl border border-border/80 bg-secondary/40 text-muted-foreground text-xs hover:border-indigo-400/80 dark:hover:border-indigo-500/60 hover:bg-card hover:shadow-xs cursor-pointer transition-all duration-200 group"
+          className="hidden md:flex items-center gap-2.5 px-3.5 py-1.5 rounded-xl border border-[#1e2548] bg-[#0c102a] text-slate-300 text-xs hover:border-cyan-500/60 hover:bg-[#0f1435] hover:shadow-[0_0_12px_rgba(6,182,212,0.15)] cursor-pointer transition-all duration-200 group"
         >
-          <Search className="w-3.5 h-3.5 text-muted-foreground group-hover:text-indigo-500 transition-colors" />
-          <span className="group-hover:text-foreground transition-colors">Search papers, topics...</span>
-          <kbd className="text-[10px] bg-card dark:bg-secondary/90 px-1.5 py-0.5 rounded-md border border-border font-mono text-muted-foreground shadow-2xs">⌘K</kbd>
+          <Search className="w-3.5 h-3.5 text-slate-400 group-hover:text-cyan-400 transition-colors" />
+          <span className="group-hover:text-white transition-colors">Search papers, topics...</span>
+          <kbd className="text-[10px] bg-[#141a3e] px-1.5 py-0.5 rounded-md border border-[#222c5e] font-mono text-cyan-300/80 shadow-2xs">⌘K</kbd>
         </div>
 
-        {/* Start New Research */}
-        <Button
-          variant="outline"
-          size="sm"
+        {/* Start New Research - Pill with glowing purple outline */}
+        <button
           onClick={() => navigate('/research/new')}
-          className="hidden sm:inline-flex text-xs h-9 gap-1.5 rounded-xl border-border/80 hover:border-indigo-400/60 hover:bg-secondary/80 font-medium transition-all"
+          className="hidden sm:inline-flex items-center gap-1.5 text-xs h-9 px-3.5 rounded-xl border border-purple-500/70 bg-[#121026] text-purple-200 hover:text-white hover:border-purple-400 hover:shadow-[0_0_15px_rgba(168,85,247,0.35)] font-semibold transition-all cursor-pointer"
         >
-          <Plus className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+          <Plus className="w-3.5 h-3.5 text-purple-400" />
           <span>New Research</span>
-        </Button>
+        </button>
 
         {/* Theme Toggle */}
         <button
           onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-          className="p-2 text-muted-foreground hover:text-foreground hover:bg-secondary/80 rounded-xl transition-all border border-transparent hover:border-border/60"
+          className="p-2 text-slate-400 hover:text-amber-400 hover:bg-[#131738] rounded-xl transition-all border border-transparent hover:border-[#1e2548]"
           title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
         >
-          {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400 animate-spin-slow" /> : <Moon className="w-4 h-4 text-indigo-600" />}
+          {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-300 animate-spin-slow" /> : <Moon className="w-4 h-4 text-indigo-400" />}
         </button>
 
-        {/* Ask Research AI Button */}
+        {/* Ask Research AI Button - Radiant Glowing Pill */}
         <button
           onClick={toggleAIAssistant}
-          className="btn-ai-glow text-white h-9 px-4 rounded-xl text-xs font-semibold flex items-center gap-2 cursor-pointer transition-all duration-200"
+          className="btn-ai-glow-cyan-magenta text-white h-9 px-4 rounded-xl text-xs font-semibold flex items-center gap-2 cursor-pointer transition-all duration-200"
         >
-          <Sparkles className="w-3.5 h-3.5 animate-pulse text-amber-300" />
+          <Sparkles className="w-3.5 h-3.5 animate-pulse text-amber-200" />
           <span>Ask Research AI</span>
         </button>
 
@@ -104,7 +102,7 @@ export const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
             await logout();
             navigate('/');
           }}
-          className="p-2 text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all border border-transparent hover:border-rose-500/20 cursor-pointer"
+          className="p-2 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-xl transition-all border border-transparent hover:border-rose-500/20 cursor-pointer"
           title="Sign Out of Workspace"
           aria-label="Sign Out"
         >
